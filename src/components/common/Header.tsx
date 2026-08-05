@@ -13,9 +13,11 @@ export const Header: React.FC = () => {
     stepForward,
     stepBackward,
     reset,
-    playbackSpeedMs
+    playbackSpeedMs,
+    validationErrors
   } = useAutomataStore();
 
+  const hasValidationErrors = validationErrors.length > 0;
   const totalSteps = executionSteps.length;
 
   // Auto-play timer effect for simulation playback
@@ -141,24 +143,26 @@ export const Header: React.FC = () => {
           <button
             className="btn-secondary"
             onClick={reset}
+            disabled={hasValidationErrors}
             title="Reset to Step 0"
-            style={{ padding: '8px 10px' }}
+            style={{ padding: '8px 10px', opacity: hasValidationErrors ? 0.5 : 1 }}
           >
             <RotateCcw size={16} />
           </button>
           <button
             className="btn-secondary"
             onClick={stepBackward}
-            disabled={currentStepIndex === 0}
+            disabled={hasValidationErrors || currentStepIndex === 0}
             title="Step Backward"
-            style={{ padding: '8px 10px', opacity: currentStepIndex === 0 ? 0.5 : 1 }}
+            style={{ padding: '8px 10px', opacity: (hasValidationErrors || currentStepIndex === 0) ? 0.5 : 1 }}
           >
             <Rewind size={16} />
           </button>
           <button
             className="btn-primary"
             onClick={() => setIsPlaying(!isPlaying)}
-            style={{ minWidth: '90px' }}
+            disabled={hasValidationErrors}
+            style={{ minWidth: '90px', opacity: hasValidationErrors ? 0.5 : 1, cursor: hasValidationErrors ? 'not-allowed' : 'pointer' }}
           >
             {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
             {isPlaying ? 'Pause' : 'Run'}
@@ -166,9 +170,9 @@ export const Header: React.FC = () => {
           <button
             className="btn-secondary"
             onClick={stepForward}
-            disabled={currentStepIndex >= totalSteps - 1}
+            disabled={hasValidationErrors || currentStepIndex >= totalSteps - 1}
             title="Step Forward"
-            style={{ padding: '8px 10px', opacity: currentStepIndex >= totalSteps - 1 ? 0.5 : 1 }}
+            style={{ padding: '8px 10px', opacity: (hasValidationErrors || currentStepIndex >= totalSteps - 1) ? 0.5 : 1 }}
           >
             <FastForward size={16} />
           </button>

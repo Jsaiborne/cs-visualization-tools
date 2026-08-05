@@ -13,11 +13,18 @@
 - [x] **Base UI Shell (`src/components/common/`)**: Main layout, Header with time-travel controls & step counter badge, and Sidebar with step snapshot inspector, input tape breakdown, step trace timeline, and dedicated Google AdSense placeholder slot (`<div id="adsense-slot-sidebar"></div>`).
 
 ## Phase 3: Interactive DFA Player with React Flow
-- [x] **Custom React Flow AutomataNode (`src/components/visualizers/AutomataNode.tsx`)**: Glassmorphic custom node representing automaton states, featuring double-concentric ring for accept states, start state indicators, and glowing cyan/purple neon box-shadows when `isActive` is true.
+- [x] **Custom React Flow AutomataNode (`src/components/visualizers/AutomataNode.tsx`)**: Glassmorphic custom node representing automaton states with double-concentric ring for accept states, start state indicators, and glowing cyan/purple neon box-shadows when `isActive` is true.
 - [x] **DFA Canvas (`src/components/visualizers/DFACanvas.tsx`)**: React Flow canvas mapping automaton states to nodes and transitions to edge labels (`transition.symbol`) with animated active stroke highlights (`#38bdf8`) and directional arrowheads (`MarkerType.ArrowClosed`).
 - [x] **Reactive Binding**: Subscribed reactively to `useAutomataStore`. Dynamically computes `activeStateId` and `activeTransitionId` based on `currentStepIndex` in real-time.
-- [x] **Main Viewport Integration (`src/components/visualizers/CanvasViewport.tsx`)**: Mounted `DFACanvas` in the central viewport space between Header and Sidebar taking up full flex-grow space.
-- [x] **Build Verification**: Verified production build and type checking with `npx tsc --noEmit && npm run build` (**0 errors**).
+
+## Phase 4: Interactive Drag-and-Drop Automata Builder
+- [x] **Store Synchronization (`src/store/useAutomataStore.ts`)**: Implemented two-way binding store actions: `addState(id, x, y)`, `removeElement(id)`, `addEdge(source, target, symbol)`, `toggleAcceptState(id)`, `setStartState(id)`, and `updateNodePosition(id, x, y)`.
+- [x] **Real-time Validator (`validateAutomaton`)**: Real-time DFA determinism and completeness checking (detects missing start state, missing accept states, non-determinism, missing transition symbols per state, and unregistered symbols). Populates `validationErrors` array.
+- [x] **Canvas Interactivity (`src/components/visualizers/DFACanvas.tsx`)**: Handled node dragging (`onNodeDragStop`), node/edge deletions (`onEdgesChange`), and interactive edge connection (`onConnect`).
+- [x] **Edge Label UX Modal**: Interactive glassmorphic modal popping up on node connection to prompt for transition character(s) before finalizing edge creation in the store.
+- [x] **Builder Toolbar (`src/components/visualizers/BuilderToolbar.tsx`)**: Floating panel over the canvas featuring glassmorphic buttons for `+ State`, `Make Start`, `Toggle Accept`, and `Delete`.
+- [x] **Sidebar Validation Section (`src/components/common/Sidebar.tsx`)**: Added Real-Time Machine Validation panel displaying warnings list. Disables "Run Simulation" / Play controls when `validationErrors.length > 0`.
+- [x] **Build Verification**: Verified production build compilation with `npx tsc --noEmit && npm run build` (**0 errors**).
 
 ## Next Objectives
 - [ ] Implement NFA set-of-states multi-active node visualizer & $\varepsilon$-closure step renderer.

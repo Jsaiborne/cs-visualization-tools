@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Layers, Sliders, CheckCircle2, XCircle, ArrowRight, Clock } from 'lucide-react';
+import { Play, Layers, Sliders, CheckCircle2, XCircle, ArrowRight, Clock, AlertTriangle } from 'lucide-react';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
 
@@ -12,18 +12,21 @@ export const Sidebar: React.FC = () => {
     runSimulation,
     executionSteps,
     currentStepIndex,
-    setStepIndex
+    setStepIndex,
+    validationErrors
   } = useAutomataStore();
 
   const currentStep = executionSteps[currentStepIndex] || {
     stepIndex: 0,
-    currentStateId: automaton.startStateId,
+    currentStateId: automaton.startStateId || 'None',
     currentSymbol: null,
     consumedInput: '',
     remainingInput: testInput,
     status: 'PENDING',
     description: 'Ready to evaluate.'
   };
+
+  const hasValidationErrors = validationErrors.length > 0;
 
   return (
     <aside
@@ -70,6 +73,53 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
+      {/* Real-Time Machine Validation Panel */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: '14px',
+          borderColor: hasValidationErrors ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.3)',
+          background: hasValidationErrors ? 'rgba(245, 158, 11, 0.05)' : 'rgba(16, 185, 129, 0.05)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {hasValidationErrors ? (
+              <AlertTriangle size={16} color="var(--accent-amber)" />
+            ) : (
+              <CheckCircle2 size={16} color="var(--accent-emerald)" />
+            )}
+            <h3 style={{ fontSize: '13px', fontWeight: 600, margin: 0 }}>
+              {hasValidationErrors ? 'Validation Issues' : 'Machine Valid'}
+            </h3>
+          </div>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '2px 6px',
+              borderRadius: '4px',
+              background: hasValidationErrors ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+              color: hasValidationErrors ? 'var(--accent-amber)' : 'var(--accent-emerald)'
+            }}
+          >
+            {hasValidationErrors ? `${validationErrors.length} Warning(s)` : 'DFA Ready'}
+          </span>
+        </div>
+
+        {hasValidationErrors ? (
+          <ul style={{ paddingLeft: '18px', margin: 0, fontSize: '11px', color: 'var(--accent-amber)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {validationErrors.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
+            Automaton definition is valid and complete. Ready for string simulation.
+          </p>
+        )}
+      </div>
+
       {/* Input String Testing Panel */}
       <div className="glass-panel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label htmlFor="test-input-field" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -81,6 +131,7 @@ export const Sidebar: React.FC = () => {
             type="text"
             value={testInput}
             onChange={(e) => setTestInput(e.target.value)}
+            disabled={hasValidationErrors}
             placeholder="e.g. 10010"
             style={{
               flex: 1,
@@ -91,10 +142,17 @@ export const Sidebar: React.FC = () => {
               color: 'var(--text-primary)',
               fontFamily: 'var(--font-mono)',
               fontSize: '14px',
-              outline: 'none'
+              outline: 'none',
+              opacity: hasValidationErrors ? 0.5 : 1
             }}
           />
-          <button className="btn-primary" onClick={runSimulation} style={{ padding: '8px 12px' }} title="Run Engine">
+          <button
+            className="btn-primary"
+            onClick={runSimulation}
+            disabled={hasValidationErrors}
+            style={{ padding: '8px 12px', opacity: hasValidationErrors ? 0.5 : 1, cursor: hasValidationErrors ? 'not-allowed' : 'pointer' }}
+            title={hasValidationErrors ? 'Fix validation errors first' : 'Run Simulation'}
+          >
             <Play size={14} />
           </button>
         </div>
