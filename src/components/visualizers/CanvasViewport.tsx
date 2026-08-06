@@ -1,6 +1,7 @@
 import React from 'react';
 import { useUIStore } from '../../store/useUIStore';
 import DFACanvas from './DFACanvas';
+import CompilerEditor from './CompilerEditor';
 
 export const CanvasViewport: React.FC = () => {
   const { activeModule } = useUIStore();
@@ -19,6 +20,8 @@ export const CanvasViewport: React.FC = () => {
     >
       {activeModule === 'AUTOMATA' ? (
         <DFACanvas />
+      ) : activeModule === 'COMPILER_AST' ? (
+        <CompilerEditor />
       ) : (
         <div
           className="glass-panel"
@@ -50,7 +53,7 @@ export const CanvasViewport: React.FC = () => {
             {activeModule} Visualizer Workspace
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '440px', fontSize: '13px', lineHeight: 1.5 }}>
-            Switch to the <strong>Finite Automata & TM</strong> tab to view interactive state machine graph simulations using React Flow and time-travel playback controls.
+            Switch to <strong>Finite Automata & TM</strong> for graph simulation or <strong>Compiler AST & IR</strong> for source code lexical analysis.
           </p>
         </div>
       )}
