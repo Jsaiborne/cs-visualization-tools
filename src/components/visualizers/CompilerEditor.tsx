@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { Code2, Sparkles, Layers, Network } from 'lucide-react';
+import { Code2, Sparkles, Layers, Network, Cpu } from 'lucide-react';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import { TokenStream } from './TokenStream';
 import { ASTViewer } from './ASTViewer';
+import { TACViewer } from './TACViewer';
 
 export const CompilerEditor: React.FC = () => {
   const { sourceCode, setSourceCode, selectedRange } = useCompilerStore();
-  const [rightPaneTab, setRightPaneTab] = useState<'TOKENS' | 'AST'>('AST');
+  const [rightPaneTab, setRightPaneTab] = useState<'TOKENS' | 'AST' | 'TAC'>('AST');
 
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
@@ -25,7 +26,7 @@ export const CompilerEditor: React.FC = () => {
     monacoRef.current = monaco;
   };
 
-  // Cross-component Monaco Editor decoration highlighting for hovered AST nodes
+  // Cross-component Monaco Editor decoration highlighting for hovered AST nodes & TAC instructions
   useEffect(() => {
     if (!editorRef.current || !monacoRef.current) return;
     const editor = editorRef.current;
@@ -228,6 +229,25 @@ export const CompilerEditor: React.FC = () => {
               <Network size={14} /> AST Tree
             </button>
             <button
+              onClick={() => setRightPaneTab('TAC')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: rightPaneTab === 'TAC' ? 600 : 400,
+                background: rightPaneTab === 'TAC' ? 'var(--accent-emerald)' : 'transparent',
+                color: rightPaneTab === 'TAC' ? '#ffffff' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              <Cpu size={14} /> TAC Code
+            </button>
+            <button
               onClick={() => setRightPaneTab('TOKENS')}
               style={{
                 display: 'flex',
@@ -251,7 +271,13 @@ export const CompilerEditor: React.FC = () => {
 
         {/* Tab View Viewport */}
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          {rightPaneTab === 'AST' ? <ASTViewer /> : <TokenStream />}
+          {rightPaneTab === 'AST' ? (
+            <ASTViewer />
+          ) : rightPaneTab === 'TAC' ? (
+            <TACViewer />
+          ) : (
+            <TokenStream />
+          )}
         </div>
       </div>
     </div>

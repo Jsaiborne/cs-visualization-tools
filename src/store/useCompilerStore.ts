@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { produce } from 'immer';
-import type { Token, ASTNode } from '../types/compiler';
+import type { Token, ASTNode, TACInstruction } from '../types/compiler';
 import { tokenize } from '../core/compiler/lexer';
 import { parse } from '../core/compiler/parser';
+import { generateTAC } from '../core/compiler/tacGenerator';
 
 export interface CodeRange {
   start: number;
@@ -14,6 +15,7 @@ interface CompilerState {
   tokens: Token[];
   activeTokenIndex: number | null;
   ast: ASTNode | null;
+  tacInstructions: TACInstruction[];
   parseError: string | null;
   selectedRange: CodeRange | null;
 
@@ -33,11 +35,14 @@ try {
   initialError = (err as Error).message;
 }
 
+const initialTac = initialAst ? generateTAC(initialAst) : [];
+
 export const useCompilerStore = create<CompilerState>((set) => ({
   sourceCode: initialSource,
   tokens: initialTokens,
   activeTokenIndex: null,
   ast: initialAst,
+  tacInstructions: initialTac,
   parseError: initialError,
   selectedRange: null,
 
@@ -53,9 +58,11 @@ export const useCompilerStore = create<CompilerState>((set) => ({
 
         try {
           draft.ast = parse(draft.tokens);
+          draft.tacInstructions = draft.ast ? generateTAC(draft.ast) : [];
           draft.parseError = null;
         } catch (err) {
           draft.ast = null;
+          draft.tacInstructions = [];
           draft.parseError = (err as Error).message;
         }
       })

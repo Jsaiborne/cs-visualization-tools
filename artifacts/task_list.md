@@ -41,9 +41,14 @@
 - [x] **D3.js AST Visualizer (`src/components/visualizers/ASTViewer.tsx`)**: Built hierarchical D3 tree diagram with SVG curved bezier links, glassmorphic node cards colored by type, D3 zoom & pan capabilities, and hover event listeners.
 - [x] **Cross-Component Monaco Binding (`src/components/visualizers/CompilerEditor.tsx`)**: Connected D3 tree node hover (`selectedRange`) to Monaco Editor `deltaDecorations` to visually highlight matching source code substrings.
 
+## Phase 7: Intermediate Representation (IR) Generator & Three-Address Code (TAC) Visualizer
+- [x] **TAC Types & Core Generator (`src/core/compiler/tacGenerator.ts`)**: Defined `TACInstruction` interface and pure `generateTAC(ast)` function implementing post-order AST traversal to generate 3AC temporary variables (`t1`, `t2`, ...) with source character offset range mapping (`originalRange`).
+- [x] **Compiler Store Integration (`src/store/useCompilerStore.ts`)**: Added `tacInstructions` array to Zustand store and updated `setSourceCode` action to generate IR instructions reactively upon AST updates.
+- [x] **TAC Glassmorphic UI (`src/components/visualizers/TACViewer.tsx`)**: Created linear assembly-style TAC viewer with monospaced syntax formatting, operator/operand color coding, instruction step badges, and range offsets.
+- [x] **Compiler Editor Tab Navigation (`src/components/visualizers/CompilerEditor.tsx`)**: Added tab system in right pane toolbar allowing seamless switching between AST Tree, TAC Code, and Token Stream views.
+- [x] **Interactive Monaco Sub-Expression Binding (`src/components/visualizers/TACViewer.tsx` & `CompilerEditor.tsx`)**: Wired `onMouseEnter` / `onMouseLeave` on TAC instruction rows to update `selectedRange` in store, triggering instant sub-expression highlights in the Monaco Editor.
+- [x] **Build Verification**: Verified TypeScript compilation and production build (`npx tsc --noEmit && npm run build`) with **0 errors**.
+
 ## Next Objectives
 - [ ] Implement NFA set-of-states multi-active node visualizer & $\varepsilon$-closure step renderer.
 - [ ] Implement Context-Free Grammar (CFG) & LR/LL Parser visualizer engine.
-- [ ] Implement Intermediate Code Generation (3AC / TAC) visualizer.
-
-

@@ -51,6 +51,17 @@ export interface BinaryExpressionNode extends BaseASTNode {
 
 export type ASTNode = ProgramNode | NumericLiteralNode | IdentifierNode | BinaryExpressionNode;
 
+export interface TACInstruction {
+  op: string;
+  arg1: string | null;
+  arg2: string | null;
+  result: string;
+  originalRange?: {
+    start: number;
+    end: number;
+  };
+}
+
 export interface GrammarProduction {
   id: string;
   lhs: string; // Left-hand non-terminal e.g. 'E'
