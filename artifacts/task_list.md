@@ -49,6 +49,14 @@
 - [x] **Interactive Monaco Sub-Expression Binding (`src/components/visualizers/TACViewer.tsx` & `CompilerEditor.tsx`)**: Wired `onMouseEnter` / `onMouseLeave` on TAC instruction rows to update `selectedRange` in store, triggering instant sub-expression highlights in the Monaco Editor.
 - [x] **Build Verification**: Verified TypeScript compilation and production build (`npx tsc --noEmit && npm run build`) with **0 errors**.
 
+## Phase 8: Turing Machine (TM) Engine & 1D Interactive Tape Visualizer
+- [x] **TM Core Logic (`src/core/automata/turingMachine.ts` & `src/types/automata.ts`)**: Defined `TMDirection`, `TMTransitionRule`, `TMConfig`, and pure `simulateTM(config, initialTape)` engine handling 1D bi-infinite tape memory, head movement (`L`/`R`/`N`), symbol rewriting, and `ExecutionStep` snapshots.
+- [x] **Automata Store Updates (`src/store/useAutomataStore.ts`)**: Integrated TM simulation into Zustand store reducers, added preset configurations (Bit Flipper `10010` -> `01101` and Binary Incrementer `1011` -> `1100`), and added rule management actions (`addTMRule`, `removeTMRule`).
+- [x] **1D Glassmorphic Tape UI (`src/components/visualizers/TuringMachineTape.tsx`)**: Built infinite 1D horizontal tape renderer with padded cells, monospace typography, status metrics, and CSS transform translation keeping the Read/Write head arrow centered during execution.
+- [x] **Interactive Rule Table (`src/components/visualizers/TuringMachineTable.tsx`)**: Created data-dense glassmorphic table displaying TM program delta function with reactive step highlighting (`activeTransitionId`) and rule addition form.
+- [x] **Workspace Viewport Integration (`src/components/visualizers/TuringMachineView.tsx` & `CanvasViewport.tsx`)**: Connected TM visualizer into main layout workspace with machine mode tab switcher between Finite Automata (DFA/NFA) and Turing Machine (TM).
+- [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
+
 ## Next Objectives
 - [ ] Implement NFA set-of-states multi-active node visualizer & $\varepsilon$-closure step renderer.
 - [ ] Implement Context-Free Grammar (CFG) & LR/LL Parser visualizer engine.

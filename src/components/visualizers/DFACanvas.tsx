@@ -16,6 +16,7 @@ import {
   type OnSelectionChangeParams,
 } from '@xyflow/react';
 import { useAutomataStore } from '../../store/useAutomataStore';
+import type { DFAConfig, NFAConfig } from '../../types/automata';
 import AutomataNode from './AutomataNode';
 import { BuilderToolbar } from './BuilderToolbar';
 
@@ -72,7 +73,9 @@ export const DFACanvas: React.FC = () => {
 
   // Transform Automaton transitions into React Flow Edges
   const initialEdges: Edge[] = useMemo(() => {
-    return automaton.transitions.map((t) => {
+    if (automaton.type === 'TM') return [];
+    const dfaOrNfa = automaton as DFAConfig | NFAConfig;
+    return dfaOrNfa.transitions.map((t) => {
       const isSelfLoop = t.from === t.to;
       const isEdgeActive = t.id === activeEdgeId;
 
