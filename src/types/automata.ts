@@ -88,6 +88,7 @@ export interface ExecutionStep {
   status: StepStatus;               // Snapshot status
   description: string;              // Human-readable step explanation
   activeTransitionId?: string;       // ID of edge or rule highlighted on canvas/table
+  activeTransitionIds?: string[];      // Multiple active edge IDs for non-deterministic branching
   stackState?: string[];            // Stack contents (for PDA)
   tapeState?: string[];             // Tape contents (for Turing Machine)
   tapeHeadIndex?: number;           // Tape head index (for Turing Machine)

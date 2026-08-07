@@ -57,6 +57,12 @@
 - [x] **Workspace Viewport Integration (`src/components/visualizers/TuringMachineView.tsx` & `CanvasViewport.tsx`)**: Connected TM visualizer into main layout workspace with machine mode tab switcher between Finite Automata (DFA/NFA) and Turing Machine (TM).
 - [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
 
+## Phase 9: Regex-to-NFA Generator (Thompson's Construction) & Multi-State NFA Visualizer
+- [x] **Regex Compiler & Thompson Construction (`src/core/automata/regexCompiler.ts`)**: Built explicit concatenation insertion, infix-to-postfix Shunting-Yard parser, Thompson's Construction algorithm (union `|`, Kleene star `*`, concat `.`, parens `()`), and Dagre left-to-right auto-layout engine.
+- [x] **NFA Execution Engine Updates (`src/core/automata.ts` & `src/types/automata.ts`)**: Enhanced `simulateNFA` and `ExecutionStep` with `currentNFAStateIds` state set tracking, $\varepsilon$-closure expansion, and `activeTransitionIds` edge path highlighting.
+- [x] **Multi-Glow & Epsilon Canvas Styling (`src/components/visualizers/DFACanvas.tsx` & `AutomataNode.tsx`)**: Enabled multi-node active glow highlights for NFA state sets and added purple dashed rendering for $\varepsilon$ (epsilon) empty transitions.
+- [x] **Regex Glassmorphic UI Panel (`src/components/visualizers/RegexPanel.tsx` & `CanvasViewport.tsx`)**: Built top control panel with preset buttons (`(0|1)*11`, `(a|b)*abb`, etc.), input fields, instant NFA generation, auto-layout positioning, and time-travel simulation binding.
+- [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
+
 ## Next Objectives
-- [ ] Implement NFA set-of-states multi-active node visualizer & $\varepsilon$-closure step renderer.
 - [ ] Implement Context-Free Grammar (CFG) & LR/LL Parser visualizer engine.

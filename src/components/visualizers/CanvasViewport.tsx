@@ -1,14 +1,17 @@
 import React from 'react';
-import { Network, Cpu } from 'lucide-react';
+import { Network, Cpu, Binary } from 'lucide-react';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore, defaultTM } from '../../store/useAutomataStore';
 import DFACanvas from './DFACanvas';
 import CompilerEditor from './CompilerEditor';
 import TuringMachineView from './TuringMachineView';
+import RegexPanel from './RegexPanel';
 
 export const CanvasViewport: React.FC = () => {
   const { activeModule } = useUIStore();
   const { automaton, setAutomaton } = useAutomataStore();
+
+  const showRegexPanel = activeModule === 'REGEX' || automaton.type === 'NFA';
 
   return (
     <main
@@ -22,7 +25,7 @@ export const CanvasViewport: React.FC = () => {
         overflow: 'hidden',
       }}
     >
-      {activeModule === 'AUTOMATA' ? (
+      {activeModule === 'AUTOMATA' || activeModule === 'REGEX' ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           {/* Sub-Header Machine Mode Switcher Bar */}
           <div
@@ -44,7 +47,6 @@ export const CanvasViewport: React.FC = () => {
               <button
                 onClick={() => {
                   if (automaton.type === 'TM') {
-                    // Switch back to DFA mode
                     setAutomaton({
                       id: 'dfa-even-zeros',
                       name: 'DFA - Binary Strings with Even Zeros',
@@ -80,7 +82,7 @@ export const CanvasViewport: React.FC = () => {
                   transition: 'all 150ms ease',
                 }}
               >
-                <Network size={13} /> Finite Automata (DFA / NFA)
+                <Network size={13} /> Automata Canvas (DFA / NFA)
               </button>
 
               <button
@@ -107,7 +109,16 @@ export const CanvasViewport: React.FC = () => {
                 <Cpu size={13} /> Turing Machine (TM)
               </button>
             </div>
+
+            {activeModule === 'REGEX' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--accent-purple)' }}>
+                <Binary size={14} /> Regex & Thompson Construction Enabled
+              </div>
+            )}
           </div>
+
+          {/* Regex Compiler Input Panel */}
+          {showRegexPanel && automaton.type !== 'TM' && <RegexPanel />}
 
           {/* Active Machine Viewport */}
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -147,10 +158,12 @@ export const CanvasViewport: React.FC = () => {
             {activeModule} Visualizer Workspace
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '440px', fontSize: '13px', lineHeight: 1.5 }}>
-            Switch to <strong>Finite Automata & TM</strong> for graph simulation or <strong>Compiler AST & IR</strong> for source code lexical analysis.
+            Switch to <strong>Finite Automata & TM</strong> or <strong>Regex & Thompson</strong> for state machine visualizer or <strong>Compiler AST & IR</strong> for source code lexical analysis.
           </p>
         </div>
       )}
     </main>
   );
 };
+
+export default CanvasViewport;

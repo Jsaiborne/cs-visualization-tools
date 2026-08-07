@@ -6,8 +6,6 @@ import {
   MiniMap,
   Panel,
   MarkerType,
-  applyNodeChanges,
-  applyEdgeChanges,
   type Node,
   type Edge,
   type OnNodesChange,
@@ -47,13 +45,22 @@ export const DFACanvas: React.FC = () => {
     status: 'PENDING',
   };
 
-  const activeStateId = currentStep.currentStateId;
-  const activeEdgeId = currentStep.activeTransitionId;
+  const activeNFAStateIds = currentStep.currentNFAStateIds || [];
+  const activeEdgeIds = currentStep.activeTransitionIds || (currentStep.activeTransitionId ? [currentStep.activeTransitionId] : []);
+
+  const activeNFAStateKey = activeNFAStateIds.join(',');
+  const activeEdgeKey = activeEdgeIds.join(',');
+  const currentStateId = currentStep.currentStateId;
+  const activeTransitionId = currentStep.activeTransitionId;
 
   // Transform Automaton states into React Flow Nodes
-  const initialNodes: Node[] = useMemo(() => {
+  const nodes: Node[] = useMemo(() => {
+    const activeSet = new Set(activeNFAStateIds);
     return automaton.states.map((st, idx) => {
-      const isActive = st.id === activeStateId;
+      const isActive = automaton.type === 'NFA'
+        ? activeSet.has(st.id)
+        : st.id === currentStateId;
+
       return {
         id: st.id,
         type: 'automataNode',
@@ -69,15 +76,19 @@ export const DFACanvas: React.FC = () => {
         },
       };
     });
-  }, [automaton.states, activeStateId]);
+  }, [automaton.states, automaton.type, currentStateId, activeNFAStateKey]);
 
   // Transform Automaton transitions into React Flow Edges
-  const initialEdges: Edge[] = useMemo(() => {
+  const edges: Edge[] = useMemo(() => {
     if (automaton.type === 'TM') return [];
     const dfaOrNfa = automaton as DFAConfig | NFAConfig;
+    const activeEdgeSet = new Set(activeEdgeIds);
+    if (activeTransitionId) activeEdgeSet.add(activeTransitionId);
+
     return dfaOrNfa.transitions.map((t) => {
       const isSelfLoop = t.from === t.to;
-      const isEdgeActive = t.id === activeEdgeId;
+      const isEpsilon = ['ε', 'e', 'eps'].includes(t.symbol);
+      const isEdgeActive = activeEdgeSet.has(t.id);
 
       return {
         id: t.id,
@@ -87,12 +98,13 @@ export const DFACanvas: React.FC = () => {
         animated: isEdgeActive,
         type: isSelfLoop ? 'smoothstep' : 'default',
         style: {
-          stroke: isEdgeActive ? '#38bdf8' : '#64748b',
+          stroke: isEdgeActive ? (isEpsilon ? '#c084fc' : '#38bdf8') : (isEpsilon ? '#a855f7' : '#64748b'),
           strokeWidth: isEdgeActive ? 3 : 2,
+          strokeDasharray: isEpsilon ? '6 4' : 'none',
           transition: 'stroke 300ms ease, stroke-width 300ms ease',
         },
         labelStyle: {
-          fill: isEdgeActive ? '#38bdf8' : '#94a3b8',
+          fill: isEdgeActive ? (isEpsilon ? '#c084fc' : '#38bdf8') : (isEpsilon ? '#c084fc' : '#94a3b8'),
           fontFamily: 'var(--font-mono)',
           fontWeight: 700,
           fontSize: '14px',
@@ -105,30 +117,24 @@ export const DFACanvas: React.FC = () => {
         labelBgPadding: [6, 4],
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isEdgeActive ? '#38bdf8' : '#64748b',
+          color: isEdgeActive ? (isEpsilon ? '#c084fc' : '#38bdf8') : (isEpsilon ? '#a855f7' : '#64748b'),
           width: 18,
           height: 18,
         },
       };
     });
-  }, [automaton.transitions, activeEdgeId]);
+  }, [automaton.transitions, automaton.type, activeEdgeKey, activeTransitionId]);
 
-  const [nodes, setNodes] = useState<Node[]>(initialNodes);
-  const [edges, setEdges] = useState<Edge[]>(initialEdges);
-
-  // Sync state changes from store to React Flow state
-  React.useEffect(() => {
-    setNodes(initialNodes);
-  }, [initialNodes]);
-
-  React.useEffect(() => {
-    setEdges(initialEdges);
-  }, [initialEdges]);
-
-  // Node changes handler (dragging, selecting)
+  // Node changes handler (deleting, selecting)
   const onNodesChange: OnNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    []
+    (changes) => {
+      changes.forEach((change) => {
+        if (change.type === 'remove') {
+          removeElement(change.id);
+        }
+      });
+    },
+    [removeElement]
   );
 
   // Edge changes handler (deleting, selecting)
@@ -139,7 +145,6 @@ export const DFACanvas: React.FC = () => {
           removeElement(change.id);
         }
       });
-      setEdges((eds) => applyEdgeChanges(changes, eds));
     },
     [removeElement]
   );
@@ -336,7 +341,7 @@ export const DFACanvas: React.FC = () => {
           }}
         />
         <span style={{ fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-sans)' }}>
-          State: <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{activeStateId}</code>
+          State: <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{currentStep.currentStateId}</code>
         </span>
       </div>
     </div>

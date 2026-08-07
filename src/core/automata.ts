@@ -130,6 +130,46 @@ export function simulateDFA(dfa: DFAConfig, inputString: string): ExecutionStep[
   return steps;
 }
 
+export interface EpsilonClosureResult {
+  states: string[];
+  traversedEdgeIds: string[];
+}
+
+/**
+ * Computes Epsilon (ε) Closure for an NFA state set and tracks all epsilon transition edges traversed.
+ */
+export function getEpsilonClosureWithEdges(
+  stateIds: string[],
+  table: NFATransitionTable,
+  transitions: TransitionEdge[]
+): EpsilonClosureResult {
+  const closure = new Set<string>(stateIds);
+  const stack = [...stateIds];
+  const traversedEdgeIds = new Set<string>();
+
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    const epsTargets = table[current]?.['ε'] || table[current]?.['e'] || table[current]?.['eps'] || [];
+    for (const target of epsTargets) {
+      const edge = transitions.find(
+        (t) => t.from === current && t.to === target && ['ε', 'e', 'eps'].includes(t.symbol)
+      );
+      if (edge) {
+        traversedEdgeIds.add(edge.id);
+      }
+      if (!closure.has(target)) {
+        closure.add(target);
+        stack.push(target);
+      }
+    }
+  }
+
+  return {
+    states: Array.from(closure),
+    traversedEdgeIds: Array.from(traversedEdgeIds),
+  };
+}
+
 /**
  * Computes Epsilon (ε) Closure for an NFA state set
  */
@@ -158,7 +198,8 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
   const table = nfa.transitionTable || buildNFATransitionTable(nfa.transitions);
   const acceptSet = new Set(nfa.acceptStateIds);
 
-  let currentStates = getEpsilonClosure([nfa.startStateId], table);
+  const initialClosure = getEpsilonClosureWithEdges([nfa.startStateId], table, nfa.transitions);
+  let currentStates = initialClosure.states;
   const steps: ExecutionStep[] = [];
 
   steps.push({
@@ -169,7 +210,9 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
     consumedInput: '',
     remainingInput: inputString,
     status: 'PENDING',
-    description: `Initial state set (with ε-closure): { ${currentStates.join(', ')} }`
+    activeTransitionIds: initialClosure.traversedEdgeIds,
+    activeTransitionId: initialClosure.traversedEdgeIds[0],
+    description: `Initial active state set (with ε-closure): { ${currentStates.join(', ')} }`
   });
 
   for (let i = 0; i < inputString.length; i++) {
@@ -177,17 +220,23 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
     const consumed = inputString.slice(0, i + 1);
     const remaining = inputString.slice(i + 1);
 
-    const nextStateSet = new Set<string>();
+    const symbolEdges: string[] = [];
+    const symbolTargets = new Set<string>();
+
     for (const s of currentStates) {
       const targets = table[s]?.[symbol] || [];
       for (const t of targets) {
-        nextStateSet.add(t);
+        symbolTargets.add(t);
+        const edge = nfa.transitions.find((tr) => tr.from === s && tr.symbol === symbol && tr.to === t);
+        if (edge) symbolEdges.push(edge.id);
       }
     }
 
-    const nextStatesWithEps = getEpsilonClosure(Array.from(nextStateSet), table);
+    const closureResult = getEpsilonClosureWithEdges(Array.from(symbolTargets), table, nfa.transitions);
+    const nextStates = closureResult.states;
+    const allActiveEdges = Array.from(new Set([...symbolEdges, ...closureResult.traversedEdgeIds]));
 
-    if (nextStatesWithEps.length === 0) {
+    if (nextStates.length === 0) {
       steps.push({
         stepIndex: i + 1,
         currentStateId: 'Ø',
@@ -201,7 +250,7 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
       return steps;
     }
 
-    currentStates = nextStatesWithEps;
+    currentStates = nextStates;
 
     steps.push({
       stepIndex: i + 1,
@@ -211,6 +260,8 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
       consumedInput: consumed,
       remainingInput: remaining,
       status: 'STEPPING',
+      activeTransitionIds: allActiveEdges,
+      activeTransitionId: allActiveEdges[0],
       description: `Read symbol '${symbol}': Active state set -> { ${currentStates.join(', ')} }`
     });
   }
