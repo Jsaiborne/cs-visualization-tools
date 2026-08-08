@@ -64,5 +64,13 @@
 - [x] **Regex Glassmorphic UI Panel (`src/components/visualizers/RegexPanel.tsx` & `CanvasViewport.tsx`)**: Built top control panel with preset buttons (`(0|1)*11`, `(a|b)*abb`, etc.), input fields, instant NFA generation, auto-layout positioning, and time-travel simulation binding.
 - [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
 
+## Phase 10: Context-Free Grammar (CFG) Engine & LL(1) Parsing Visualizer
+- [x] **CFG Types & Core (`src/types/cfg.ts` & `src/core/compiler/cfgEngine.ts`)**: Defined `Grammar`, `ProductionRule`, `LL1Table`, and `LL1ExecutionStep` interfaces. Built text-based grammar parser (`parseGrammarText`) and pure fixpoint iteration functions to calculate `FIRST` and `FOLLOW` sets.
+- [x] **LL(1) Table & Pushdown Automaton Simulator (`src/core/compiler/ll1Parser.ts`)**: Built 2D LL(1) table generator with conflict detection, and `simulateLL1` stack-based Pushdown Automaton execution step snapshot generator.
+- [x] **State Management & Time-Travel (`src/store/useGrammarStore.ts` & `Header.tsx`)**: Created Zustand store with preset grammars (`Arithmetic`, `S -> A B | c`, `Nested Parens`), input tape reactive binding, and connected time-travel controls in header bar.
+- [x] **Glassmorphic CFG Visualizer UI (`src/components/visualizers/CFGViewer.tsx` & `CanvasViewport.tsx`)**: Built split-panel workspace featuring grammar editor, instant FIRST/FOLLOW set badges, interactive 2D LL(1) table with active lookahead/top-of-stack cell highlighting, and animated vertical Pushdown Stack visualizer.
+- [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
+
 ## Next Objectives
-- [ ] Implement Context-Free Grammar (CFG) & LR/LL Parser visualizer engine.
+- All planned phases completed successfully. Visualizer suite fully operational.
+

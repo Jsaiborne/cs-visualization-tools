@@ -2,22 +2,25 @@ import React, { useEffect } from 'react';
 import { Cpu, Network, Binary, Code2, Play, Pause, RotateCcw, FastForward, Rewind } from 'lucide-react';
 import { useUIStore, type ActiveModule } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
+import { useGrammarStore } from '../../store/useGrammarStore';
 
 export const Header: React.FC = () => {
   const { activeModule, setActiveModule } = useUIStore();
-  const {
-    isPlaying,
-    setIsPlaying,
-    currentStepIndex,
-    executionSteps,
-    stepForward,
-    stepBackward,
-    reset,
-    playbackSpeedMs,
-    validationErrors
-  } = useAutomataStore();
+  const automataStore = useAutomataStore();
+  const grammarStore = useGrammarStore();
 
-  const hasValidationErrors = validationErrors.length > 0;
+  const isGrammarMode = activeModule === 'GRAMMAR';
+
+  const isPlaying = isGrammarMode ? grammarStore.isPlaying : automataStore.isPlaying;
+  const setIsPlaying = isGrammarMode ? grammarStore.setIsPlaying : automataStore.setIsPlaying;
+  const currentStepIndex = isGrammarMode ? grammarStore.currentStepIndex : automataStore.currentStepIndex;
+  const executionSteps = isGrammarMode ? grammarStore.executionSteps : automataStore.executionSteps;
+  const stepForward = isGrammarMode ? grammarStore.stepForward : automataStore.stepForward;
+  const stepBackward = isGrammarMode ? grammarStore.stepBackward : automataStore.stepBackward;
+  const reset = isGrammarMode ? grammarStore.reset : automataStore.reset;
+  const playbackSpeedMs = isGrammarMode ? grammarStore.playbackSpeedMs : automataStore.playbackSpeedMs;
+  const hasValidationErrors = isGrammarMode ? !!grammarStore.parseError : automataStore.validationErrors.length > 0;
+
   const totalSteps = executionSteps.length;
 
   // Auto-play timer effect for simulation playback

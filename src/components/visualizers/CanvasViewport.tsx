@@ -6,6 +6,7 @@ import DFACanvas from './DFACanvas';
 import CompilerEditor from './CompilerEditor';
 import TuringMachineView from './TuringMachineView';
 import RegexPanel from './RegexPanel';
+import CFGViewer from './CFGViewer';
 
 export const CanvasViewport: React.FC = () => {
   const { activeModule } = useUIStore();
@@ -125,6 +126,8 @@ export const CanvasViewport: React.FC = () => {
             {automaton.type === 'TM' ? <TuringMachineView /> : <DFACanvas />}
           </div>
         </div>
+      ) : activeModule === 'GRAMMAR' ? (
+        <CFGViewer />
       ) : activeModule === 'COMPILER_AST' ? (
         <CompilerEditor />
       ) : (
