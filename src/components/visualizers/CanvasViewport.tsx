@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Network, Cpu, Binary } from 'lucide-react';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore, defaultTM } from '../../store/useAutomataStore';
@@ -7,10 +7,16 @@ import CompilerEditor from './CompilerEditor';
 import TuringMachineView from './TuringMachineView';
 import RegexPanel from './RegexPanel';
 import CFGViewer from './CFGViewer';
+import LandingPage from '../common/LandingPage';
+import { loadStateFromURL } from '../../utils/urlState';
 
 export const CanvasViewport: React.FC = () => {
   const { activeModule } = useUIStore();
   const { automaton, setAutomaton } = useAutomataStore();
+
+  useEffect(() => {
+    loadStateFromURL();
+  }, []);
 
   const showRegexPanel = activeModule === 'REGEX' || automaton.type === 'NFA';
 
@@ -26,7 +32,9 @@ export const CanvasViewport: React.FC = () => {
         overflow: 'hidden',
       }}
     >
-      {activeModule === 'AUTOMATA' || activeModule === 'REGEX' ? (
+      {activeModule === 'HOME' ? (
+        <LandingPage />
+      ) : activeModule === 'AUTOMATA' || activeModule === 'REGEX' ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           {/* Sub-Header Machine Mode Switcher Bar */}
           <div
@@ -131,39 +139,7 @@ export const CanvasViewport: React.FC = () => {
       ) : activeModule === 'COMPILER_AST' ? (
         <CompilerEditor />
       ) : (
-        <div
-          className="glass-panel"
-          style={{
-            margin: '24px',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            gap: '16px',
-          }}
-        >
-          <div
-            style={{
-              padding: '6px 16px',
-              borderRadius: '20px',
-              background: 'rgba(168, 85, 247, 0.15)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              color: 'var(--accent-purple)',
-              fontSize: '12px',
-              fontWeight: 600,
-            }}
-          >
-            Module Ready
-          </div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>
-            {activeModule} Visualizer Workspace
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '440px', fontSize: '13px', lineHeight: 1.5 }}>
-            Switch to <strong>Finite Automata & TM</strong> or <strong>Regex & Thompson</strong> for state machine visualizer or <strong>Compiler AST & IR</strong> for source code lexical analysis.
-          </p>
-        </div>
+        <LandingPage />
       )}
     </main>
   );
