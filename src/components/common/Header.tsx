@@ -3,23 +3,26 @@ import { Cpu, Network, Binary, Code2, Play, Pause, RotateCcw, FastForward, Rewin
 import { useUIStore, type ActiveModule } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import { useGrammarStore } from '../../store/useGrammarStore';
+import { useScopeStore } from '../../store/useScopeStore';
 
 export const Header: React.FC = () => {
   const { activeModule, setActiveModule } = useUIStore();
   const automataStore = useAutomataStore();
   const grammarStore = useGrammarStore();
+  const scopeStore = useScopeStore();
 
   const isGrammarMode = activeModule === 'GRAMMAR';
+  const isScopeMode = activeModule === 'COMPILER_AST';
 
-  const isPlaying = isGrammarMode ? grammarStore.isPlaying : automataStore.isPlaying;
-  const setIsPlaying = isGrammarMode ? grammarStore.setIsPlaying : automataStore.setIsPlaying;
-  const currentStepIndex = isGrammarMode ? grammarStore.currentStepIndex : automataStore.currentStepIndex;
-  const executionSteps = isGrammarMode ? grammarStore.executionSteps : automataStore.executionSteps;
-  const stepForward = isGrammarMode ? grammarStore.stepForward : automataStore.stepForward;
-  const stepBackward = isGrammarMode ? grammarStore.stepBackward : automataStore.stepBackward;
-  const reset = isGrammarMode ? grammarStore.reset : automataStore.reset;
-  const playbackSpeedMs = isGrammarMode ? grammarStore.playbackSpeedMs : automataStore.playbackSpeedMs;
-  const hasValidationErrors = isGrammarMode ? !!grammarStore.parseError : automataStore.validationErrors.length > 0;
+  const isPlaying = isGrammarMode ? grammarStore.isPlaying : isScopeMode ? scopeStore.isPlaying : automataStore.isPlaying;
+  const setIsPlaying = isGrammarMode ? grammarStore.setIsPlaying : isScopeMode ? scopeStore.setIsPlaying : automataStore.setIsPlaying;
+  const currentStepIndex = isGrammarMode ? grammarStore.currentStepIndex : isScopeMode ? scopeStore.currentStepIndex : automataStore.currentStepIndex;
+  const executionSteps = isGrammarMode ? grammarStore.executionSteps : isScopeMode ? scopeStore.scopeSteps : automataStore.executionSteps;
+  const stepForward = isGrammarMode ? grammarStore.stepForward : isScopeMode ? scopeStore.stepForward : automataStore.stepForward;
+  const stepBackward = isGrammarMode ? grammarStore.stepBackward : isScopeMode ? scopeStore.stepBackward : automataStore.stepBackward;
+  const reset = isGrammarMode ? grammarStore.reset : isScopeMode ? scopeStore.reset : automataStore.reset;
+  const playbackSpeedMs = isGrammarMode ? grammarStore.playbackSpeedMs : isScopeMode ? scopeStore.playbackSpeedMs : automataStore.playbackSpeedMs;
+  const hasValidationErrors = isGrammarMode ? !!grammarStore.parseError : isScopeMode ? !!scopeStore.parseError : automataStore.validationErrors.length > 0;
 
   const totalSteps = executionSteps.length;
 

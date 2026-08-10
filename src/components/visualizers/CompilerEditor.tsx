@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { Code2, Sparkles, Layers, Network, Cpu } from 'lucide-react';
+import { Code2, Sparkles, Layers, Network, Cpu, Database } from 'lucide-react';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import { TokenStream } from './TokenStream';
 import { ASTViewer } from './ASTViewer';
 import { TACViewer } from './TACViewer';
+import SymbolTableViewer from './SymbolTableViewer';
 
 export const CompilerEditor: React.FC = () => {
   const { sourceCode, setSourceCode, selectedRange } = useCompilerStore();
-  const [rightPaneTab, setRightPaneTab] = useState<'TOKENS' | 'AST' | 'TAC'>('AST');
+  const [rightPaneTab, setRightPaneTab] = useState<'TOKENS' | 'AST' | 'TAC' | 'SYMBOL_TABLE'>('AST');
 
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
@@ -63,6 +64,102 @@ export const CompilerEditor: React.FC = () => {
       decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
     }
   }, [selectedRange]);
+
+  if (rightPaneTab === 'SYMBOL_TABLE') {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div
+          style={{
+            height: '42px',
+            padding: '0 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(15, 23, 42, 0.9)',
+            borderBottom: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '4px', background: 'rgba(30, 41, 59, 0.6)', padding: '3px', borderRadius: '6px' }}>
+            <button
+              onClick={() => setRightPaneTab('AST')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 400,
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+              }}
+            >
+              <Network size={14} /> AST Tree
+            </button>
+            <button
+              onClick={() => setRightPaneTab('TAC')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 400,
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+              }}
+            >
+              <Cpu size={14} /> TAC Code
+            </button>
+            <button
+              onClick={() => setRightPaneTab('TOKENS')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 400,
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+              }}
+            >
+              <Layers size={14} /> Token Stream
+            </button>
+            <button
+              onClick={() => setRightPaneTab('SYMBOL_TABLE')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                background: 'var(--accent-purple)',
+                color: '#ffffff',
+                cursor: 'pointer',
+              }}
+            >
+              <Database size={14} /> Symbol Table
+            </button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <SymbolTableViewer />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

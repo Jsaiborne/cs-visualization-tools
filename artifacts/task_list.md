@@ -71,6 +71,14 @@
 - [x] **Glassmorphic CFG Visualizer UI (`src/components/visualizers/CFGViewer.tsx` & `CanvasViewport.tsx`)**: Built split-panel workspace featuring grammar editor, instant FIRST/FOLLOW set badges, interactive 2D LL(1) table with active lookahead/top-of-stack cell highlighting, and animated vertical Pushdown Stack visualizer.
 - [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
 
+## Phase 11: Semantic Analyzer & Interactive Symbol Table Visualizer
+- [x] **Mini-Language Lexer & Parser (`src/core/compiler/scopeParser.ts`)**: Built lightweight lexer and recursive descent parser supporting keywords (`let`), identifiers, assignments (`=`), numbers, semicolons (`;`), and block braces (`{`, `}`), generating AST nodes with exact line numbers and char offsets.
+- [x] **Semantic Analyzer Engine (`src/core/compiler/semanticAnalyzer.ts`)**: Built pure `analyzeScopes(ast)` traversal engine maintaining an active scope stack, pushing scopes on entering `{`, popping on `}`, tracking variable declarations/shadowing, and emitting isolated deep-copied execution step snapshots.
+- [x] **Time-Travel Store (`src/store/useScopeStore.ts`)**: Created Zustand store with Immer middleware managing mini-language source code, step snapshots, and playback actions (`stepForward`, `stepBackward`, `reset`).
+- [x] **Interactive Symbol Table UI (`src/components/visualizers/SymbolTableViewer.tsx` & `CompilerEditor.tsx`)**: Built split-panel visualizer with Monaco Editor on left highlighting active lines, and vertical stack of glassmorphic Scope Dictionary cards on right showing variable names, types, values, and shadowing badges.
+- [x] **Build Verification**: Verified production build compilation (`npx tsc --noEmit && npm run build`) with **0 errors**.
+
 ## Next Objectives
 - All planned phases completed successfully. Visualizer suite fully operational.
+
 

@@ -101,10 +101,16 @@ html, body, #root {
   border-color: var(--border-active);
 }
 
-/* Monaco AST Highlight */
+/* Monaco AST & Scope Highlight */
 .monaco-ast-inline-highlight {
   background: rgba(56, 189, 248, 0.35) !important;
   border-bottom: 2px solid var(--accent-blue) !important;
   border-radius: 3px !important;
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
 }
+
+.monaco-scope-line-highlight {
+  background: rgba(168, 85, 247, 0.2) !important;
+  border-left: 4px solid var(--accent-purple) !important;
+}
+
