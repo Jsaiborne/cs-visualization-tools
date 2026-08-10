@@ -114,7 +114,7 @@ export const useScopeStore = create<ScopeState>((set) => ({
 
   stepForward: () => {
     set((state) => {
-      if (state.currentStepIndex < state.scopeSteps.length - 1) {
+      if (state.scopeSteps.length > 0 && state.currentStepIndex < state.scopeSteps.length - 1) {
         return { currentStepIndex: state.currentStepIndex + 1 };
       }
       return { isPlaying: false };
@@ -123,7 +123,7 @@ export const useScopeStore = create<ScopeState>((set) => ({
 
   stepBackward: () => {
     set((state) => {
-      if (state.currentStepIndex > 0) {
+      if (state.scopeSteps.length > 0 && state.currentStepIndex > 0) {
         return { currentStepIndex: state.currentStepIndex - 1 };
       }
       return {};

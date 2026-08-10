@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -6,6 +6,8 @@ import {
   MiniMap,
   Panel,
   MarkerType,
+  ReactFlowProvider,
+  useReactFlow,
   type Node,
   type Edge,
   type OnNodesChange,
@@ -22,7 +24,7 @@ const nodeTypes = {
   automataNode: AutomataNode,
 };
 
-export const DFACanvas: React.FC = () => {
+const DFACanvasInner: React.FC = () => {
   const {
     automaton,
     executionSteps,
@@ -39,11 +41,11 @@ export const DFACanvas: React.FC = () => {
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [transitionSymbol, setTransitionSymbol] = useState<string>('0');
 
-  const currentStep = executionSteps[currentStepIndex] || {
+  const currentStep = executionSteps[currentStepIndex] || ({
     currentStateId: automaton.startStateId,
     activeTransitionId: undefined,
     status: 'PENDING',
-  };
+  } as any);
 
   const activeNFAStateIds = currentStep.currentNFAStateIds || [];
   const activeEdgeIds = currentStep.activeTransitionIds || (currentStep.activeTransitionId ? [currentStep.activeTransitionId] : []);
@@ -52,6 +54,15 @@ export const DFACanvas: React.FC = () => {
   const activeEdgeKey = activeEdgeIds.join(',');
   const currentStateId = currentStep.currentStateId;
   const activeTransitionId = currentStep.activeTransitionId;
+
+  const flow = useReactFlow();
+  useEffect(() => {
+    const handleResize = () => {
+      window.requestAnimationFrame(() => flow.fitView({ padding: 0.3, duration: 200 }));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [flow]);
 
   // Transform Automaton states into React Flow Nodes
   const nodes: Node[] = useMemo(() => {
@@ -347,5 +358,11 @@ export const DFACanvas: React.FC = () => {
     </div>
   );
 };
+
+export const DFACanvas: React.FC = () => (
+  <ReactFlowProvider>
+    <DFACanvasInner />
+  </ReactFlowProvider>
+);
 
 export default DFACanvas;

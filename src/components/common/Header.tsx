@@ -13,6 +13,7 @@ import {
   Share2,
   CheckCircle2,
 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useUIStore, type ActiveModule } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import { useGrammarStore } from '../../store/useGrammarStore';
@@ -20,59 +21,67 @@ import { useScopeStore } from '../../store/useScopeStore';
 import { getShareableURL } from '../../utils/urlState';
 
 export const Header: React.FC = () => {
-  const { activeModule, setActiveModule, toastMessage, showToast } = useUIStore();
-  const automataStore = useAutomataStore();
-  const grammarStore = useGrammarStore();
-  const scopeStore = useScopeStore();
+  const { activeModule, setActiveModule, toastMessage, showToast } = useUIStore(useShallow(state => ({
+    activeModule: state.activeModule,
+    setActiveModule: state.setActiveModule,
+    toastMessage: state.toastMessage,
+    showToast: state.showToast
+  })));
+  
+  const automataStore = useAutomataStore(useShallow(state => ({
+    isPlaying: state.isPlaying,
+    setIsPlaying: state.setIsPlaying,
+    currentStepIndex: state.currentStepIndex,
+    executionSteps: state.executionSteps,
+    stepForward: state.stepForward,
+    stepBackward: state.stepBackward,
+    reset: state.reset,
+    playbackSpeedMs: state.playbackSpeedMs,
+    hasValidationErrors: state.validationErrors.length > 0
+  })));
+  
+  const grammarStore = useGrammarStore(useShallow(state => ({
+    isPlaying: state.isPlaying,
+    setIsPlaying: state.setIsPlaying,
+    currentStepIndex: state.currentStepIndex,
+    executionSteps: state.executionSteps,
+    stepForward: state.stepForward,
+    stepBackward: state.stepBackward,
+    reset: state.reset,
+    playbackSpeedMs: state.playbackSpeedMs,
+    hasValidationErrors: !!state.parseError
+  })));
+  
+  const scopeStore = useScopeStore(useShallow(state => ({
+    isPlaying: state.isPlaying,
+    setIsPlaying: state.setIsPlaying,
+    currentStepIndex: state.currentStepIndex,
+    scopeSteps: state.scopeSteps,
+    stepForward: state.stepForward,
+    stepBackward: state.stepBackward,
+    reset: state.reset,
+    playbackSpeedMs: state.playbackSpeedMs,
+    hasValidationErrors: !!state.parseError
+  })));
 
   const isGrammarMode = activeModule === 'GRAMMAR';
   const isScopeMode = activeModule === 'COMPILER_AST';
 
-  const isPlaying = isGrammarMode
-    ? grammarStore.isPlaying
+  const activeStore = isGrammarMode
+    ? grammarStore
     : isScopeMode
-    ? scopeStore.isPlaying
-    : automataStore.isPlaying;
-  const setIsPlaying = isGrammarMode
-    ? grammarStore.setIsPlaying
-    : isScopeMode
-    ? scopeStore.setIsPlaying
-    : automataStore.setIsPlaying;
-  const currentStepIndex = isGrammarMode
-    ? grammarStore.currentStepIndex
-    : isScopeMode
-    ? scopeStore.currentStepIndex
-    : automataStore.currentStepIndex;
-  const executionSteps = isGrammarMode
-    ? grammarStore.executionSteps
-    : isScopeMode
-    ? scopeStore.scopeSteps
-    : automataStore.executionSteps;
-  const stepForward = isGrammarMode
-    ? grammarStore.stepForward
-    : isScopeMode
-    ? scopeStore.stepForward
-    : automataStore.stepForward;
-  const stepBackward = isGrammarMode
-    ? grammarStore.stepBackward
-    : isScopeMode
-    ? scopeStore.stepBackward
-    : automataStore.stepBackward;
-  const reset = isGrammarMode
-    ? grammarStore.reset
-    : isScopeMode
-    ? scopeStore.reset
-    : automataStore.reset;
-  const playbackSpeedMs = isGrammarMode
-    ? grammarStore.playbackSpeedMs
-    : isScopeMode
-    ? scopeStore.playbackSpeedMs
-    : automataStore.playbackSpeedMs;
-  const hasValidationErrors = isGrammarMode
-    ? !!grammarStore.parseError
-    : isScopeMode
-    ? !!scopeStore.parseError
-    : automataStore.validationErrors.length > 0;
+    ? scopeStore
+    : automataStore;
+
+  const isPlaying = activeStore.isPlaying;
+  const setIsPlaying = activeStore.setIsPlaying;
+  const currentStepIndex = activeStore.currentStepIndex;
+  const executionSteps = 'scopeSteps' in activeStore ? activeStore.scopeSteps : activeStore.executionSteps;
+  const stepForward = activeStore.stepForward;
+  const stepBackward = activeStore.stepBackward;
+  const reset = activeStore.reset;
+  const playbackSpeedMs = activeStore.playbackSpeedMs;
+  const hasValidationErrors = activeStore.hasValidationErrors;
 
   const totalSteps = executionSteps.length;
 
@@ -258,29 +267,29 @@ export const Header: React.FC = () => {
               <button
                 className="btn-secondary"
                 onClick={reset}
-                disabled={hasValidationErrors}
+                disabled={hasValidationErrors || totalSteps === 0}
                 title="Reset to Step 0"
-                style={{ padding: '8px 10px', opacity: hasValidationErrors ? 0.5 : 1 }}
+                style={{ padding: '8px 10px', opacity: hasValidationErrors || totalSteps === 0 ? 0.5 : 1 }}
               >
                 <RotateCcw size={16} />
               </button>
               <button
                 className="btn-secondary"
                 onClick={stepBackward}
-                disabled={hasValidationErrors || currentStepIndex === 0}
+                disabled={hasValidationErrors || currentStepIndex === 0 || totalSteps === 0}
                 title="Step Backward"
-                style={{ padding: '8px 10px', opacity: hasValidationErrors || currentStepIndex === 0 ? 0.5 : 1 }}
+                style={{ padding: '8px 10px', opacity: hasValidationErrors || currentStepIndex === 0 || totalSteps === 0 ? 0.5 : 1 }}
               >
                 <Rewind size={16} />
               </button>
               <button
                 className="btn-primary"
                 onClick={() => setIsPlaying(!isPlaying)}
-                disabled={hasValidationErrors}
+                disabled={hasValidationErrors || totalSteps === 0}
                 style={{
                   minWidth: '85px',
-                  opacity: hasValidationErrors ? 0.5 : 1,
-                  cursor: hasValidationErrors ? 'not-allowed' : 'pointer',
+                  opacity: hasValidationErrors || totalSteps === 0 ? 0.5 : 1,
+                  cursor: hasValidationErrors || totalSteps === 0 ? 'not-allowed' : 'pointer',
                 }}
               >
                 {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
@@ -289,9 +298,9 @@ export const Header: React.FC = () => {
               <button
                 className="btn-secondary"
                 onClick={stepForward}
-                disabled={hasValidationErrors || currentStepIndex >= totalSteps - 1}
+                disabled={hasValidationErrors || currentStepIndex >= totalSteps - 1 || totalSteps === 0}
                 title="Step Forward"
-                style={{ padding: '8px 10px', opacity: hasValidationErrors || currentStepIndex >= totalSteps - 1 ? 0.5 : 1 }}
+                style={{ padding: '8px 10px', opacity: hasValidationErrors || currentStepIndex >= totalSteps - 1 || totalSteps === 0 ? 0.5 : 1 }}
               >
                 <FastForward size={16} />
               </button>

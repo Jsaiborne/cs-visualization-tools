@@ -77,11 +77,11 @@ html, body, #root {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background 300ms ease;
 }
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
 }
 
 .btn-secondary {
@@ -94,11 +94,12 @@ html, body, #root {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition: background 300ms ease, border-color 300ms ease, transform var(--transition-fast);
 }
 .btn-secondary:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-active);
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--accent-blue);
+  transform: translateY(-1px);
 }
 
 /* Monaco AST & Scope Highlight */
@@ -141,6 +142,13 @@ html, body, #root {
 
   #main-viewport-container {
     height: calc(100vh - 120px) !important;
+  }
+
+  /* Fix overlapping absolute elements on small screens */
+  .react-flow__panel {
+    transform: scale(0.85);
+    transform-origin: top right;
+    margin: 10px !important;
   }
 }
 

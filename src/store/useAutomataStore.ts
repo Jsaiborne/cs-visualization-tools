@@ -259,7 +259,7 @@ export const useAutomataStore = create<AutomataState>((set) => ({
   stepForward: () =>
     set(
       produce((draft: AutomataState) => {
-        if (draft.currentStepIndex < draft.executionSteps.length - 1) {
+        if (draft.executionSteps.length > 0 && draft.currentStepIndex < draft.executionSteps.length - 1) {
           draft.currentStepIndex += 1;
         } else {
           draft.isPlaying = false;
@@ -270,7 +270,7 @@ export const useAutomataStore = create<AutomataState>((set) => ({
   stepBackward: () =>
     set(
       produce((draft: AutomataState) => {
-        if (draft.currentStepIndex > 0) {
+        if (draft.executionSteps.length > 0 && draft.currentStepIndex > 0) {
           draft.currentStepIndex -= 1;
         }
       })

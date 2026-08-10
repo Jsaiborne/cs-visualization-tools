@@ -82,21 +82,21 @@ export function loadStateFromURL(): boolean {
 
     if (stateParam) {
       const data = deserializeState<any>(stateParam);
-      if (data) {
-        if (data.automaton && (moduleParam === 'AUTOMATA' || moduleParam === 'REGEX')) {
+      if (data && typeof data === 'object') {
+        if (data.automaton && typeof data.automaton === 'object' && Array.isArray(data.automaton.states) && (moduleParam === 'AUTOMATA' || moduleParam === 'REGEX')) {
           useAutomataStore.getState().setAutomaton(data.automaton);
         }
-        if (data.grammarText && moduleParam === 'GRAMMAR') {
+        if (typeof data.grammarText === 'string' && moduleParam === 'GRAMMAR') {
           useGrammarStore.getState().setGrammarText(data.grammarText);
-          if (data.testInput) {
+          if (typeof data.testInput === 'string') {
             useGrammarStore.getState().setTestInput(data.testInput);
           }
         }
         if (moduleParam === 'COMPILER_AST') {
-          if (data.sourceCode) {
+          if (typeof data.sourceCode === 'string') {
             useCompilerStore.getState().setSourceCode(data.sourceCode);
           }
-          if (data.scopeCode) {
+          if (typeof data.scopeCode === 'string') {
             useScopeStore.getState().setSourceCode(data.scopeCode);
           }
         }

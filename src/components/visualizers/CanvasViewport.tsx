@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Network, Cpu, Binary } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore, defaultTM } from '../../store/useAutomataStore';
 import DFACanvas from './DFACanvas';
@@ -11,8 +12,11 @@ import LandingPage from '../common/LandingPage';
 import { loadStateFromURL } from '../../utils/urlState';
 
 export const CanvasViewport: React.FC = () => {
-  const { activeModule } = useUIStore();
-  const { automaton, setAutomaton } = useAutomataStore();
+  const activeModule = useUIStore(useShallow(state => state.activeModule));
+  const { automaton, setAutomaton } = useAutomataStore(useShallow(state => ({
+    automaton: state.automaton,
+    setAutomaton: state.setAutomaton
+  })));
 
   useEffect(() => {
     loadStateFromURL();

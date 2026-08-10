@@ -56,6 +56,17 @@ export const ASTViewer: React.FC = () => {
     const initialTransform = d3.zoomIdentity.translate(width / 2, 60).scale(0.9);
     svg.call(zoom.transform as any, initialTransform);
 
+    // Resize Observer for responsive centering
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (!entries.length) return;
+      const newWidth = entries[0].contentRect.width;
+      svg.transition().duration(200).call(
+        zoom.transform as any,
+        d3.zoomIdentity.translate(newWidth / 2, 60).scale(0.9)
+      );
+    });
+    resizeObserver.observe(container);
+
     // Render Curved Bezier Links
     const linkGenerator = d3
       .linkVertical<any, d3.HierarchyPointNode<ASTNode>>()
@@ -188,6 +199,10 @@ export const ASTViewer: React.FC = () => {
         .attr('font-family', 'var(--font-mono)')
         .text(`[${d.data.start}:${d.data.end}]`);
     });
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [ast, selectedRange, setSelectedRange]);
 
   const handleResetZoom = () => {

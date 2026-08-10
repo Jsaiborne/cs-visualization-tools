@@ -148,7 +148,7 @@ export const useGrammarStore = create<GrammarState>((set, get) => ({
 
   stepForward: () => {
     set((state) => {
-      if (state.currentStepIndex < state.executionSteps.length - 1) {
+      if (state.executionSteps.length > 0 && state.currentStepIndex < state.executionSteps.length - 1) {
         return { currentStepIndex: state.currentStepIndex + 1 };
       }
       return { isPlaying: false };
@@ -157,7 +157,7 @@ export const useGrammarStore = create<GrammarState>((set, get) => ({
 
   stepBackward: () => {
     set((state) => {
-      if (state.currentStepIndex > 0) {
+      if (state.executionSteps.length > 0 && state.currentStepIndex > 0) {
         return { currentStepIndex: state.currentStepIndex - 1 };
       }
       return {};
