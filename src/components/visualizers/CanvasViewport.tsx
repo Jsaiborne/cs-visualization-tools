@@ -1,14 +1,31 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Network, Cpu, Binary } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore, defaultDFA, defaultTM } from '../../store/useAutomataStore';
-import DFACanvas from './DFACanvas';
-import CompilerEditor from './CompilerEditor';
-import TuringMachineView from './TuringMachineView';
-import RegexPanel from './RegexPanel';
-import CFGViewer from './CFGViewer';
 import LandingPage from '../common/LandingPage';
+
+// Each module's view (and its heavy libraries: React Flow, D3, dagre, Monaco) loads on first use
+const DFACanvas = lazy(() => import('./DFACanvas'));
+const CompilerEditor = lazy(() => import('./CompilerEditor'));
+const TuringMachineView = lazy(() => import('./TuringMachineView'));
+const RegexPanel = lazy(() => import('./RegexPanel'));
+const CFGViewer = lazy(() => import('./CFGViewer'));
+
+const ModuleLoading: React.FC = () => (
+  <div
+    style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'var(--text-muted)',
+      fontSize: '13px',
+    }}
+  >
+    Loading…
+  </div>
+);
 
 export const CanvasViewport: React.FC = () => {
   const activeModule = useUIStore(useShallow(state => state.activeModule));
@@ -31,6 +48,7 @@ export const CanvasViewport: React.FC = () => {
         overflow: 'hidden',
       }}
     >
+      <Suspense fallback={<ModuleLoading />}>
       {activeModule === 'HOME' ? (
         <LandingPage />
       ) : activeModule === 'AUTOMATA' || activeModule === 'REGEX' ? (
@@ -123,6 +141,7 @@ export const CanvasViewport: React.FC = () => {
       ) : (
         <LandingPage />
       )}
+      </Suspense>
     </main>
   );
 };

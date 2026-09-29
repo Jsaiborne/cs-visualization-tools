@@ -11,13 +11,16 @@ import {
   Zap,
   Share2,
 } from 'lucide-react';
-import { useUIStore, type ActiveModule } from '../../store/useUIStore';
+import { useUIStore, type ActiveModule, type CompilerTab } from '../../store/useUIStore';
 
 export const LandingPage: React.FC = () => {
   const setActiveModule = useUIStore((state) => state.setActiveModule);
+  const setCompilerTab = useUIStore((state) => state.setCompilerTab);
 
   const moduleCards: {
     id: ActiveModule;
+    /** For compiler cards: which compiler tab to open */
+    compilerTab?: CompilerTab;
     title: string;
     tag: string;
     description: string;
@@ -57,6 +60,7 @@ export const LandingPage: React.FC = () => {
     },
     {
       id: 'COMPILER_AST',
+      compilerTab: 'AST',
       title: 'Lexical Analysis & Interactive AST',
       tag: 'Compiler Front-End',
       description:
@@ -67,6 +71,7 @@ export const LandingPage: React.FC = () => {
     },
     {
       id: 'COMPILER_AST',
+      compilerTab: 'SYMBOL_TABLE',
       title: 'Semantic Analysis & Symbol Table',
       tag: 'Scope & IR Generation',
       description:
@@ -259,7 +264,10 @@ export const LandingPage: React.FC = () => {
             <div
               key={idx}
               className="glass-panel"
-              onClick={() => setActiveModule(card.id)}
+              onClick={() => {
+                if (card.compilerTab) setCompilerTab(card.compilerTab);
+                setActiveModule(card.id);
+              }}
               style={{
                 padding: '24px',
                 borderRadius: '14px',

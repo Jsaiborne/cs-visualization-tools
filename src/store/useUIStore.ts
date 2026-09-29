@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 
 export type ActiveModule = 'HOME' | 'AUTOMATA' | 'REGEX' | 'GRAMMAR' | 'COMPILER_AST';
+export type CompilerTab = 'TOKENS' | 'AST' | 'TAC' | 'SYMBOL_TABLE';
 
 interface UIState {
   activeModule: ActiveModule;
   isSidebarOpen: boolean;
   activeTab: 'DESIGN' | 'SIMULATE' | 'PRESETS';
   toastMessage: string | null;
+  compilerTab: CompilerTab;
+  setCompilerTab: (tab: CompilerTab) => void;
   setActiveModule: (module: ActiveModule) => void;
   toggleSidebar: () => void;
   setActiveTab: (tab: 'DESIGN' | 'SIMULATE' | 'PRESETS') => void;
@@ -20,6 +23,8 @@ export const useUIStore = create<UIState>((set) => ({
   isSidebarOpen: true,
   activeTab: 'DESIGN',
   toastMessage: null,
+  compilerTab: 'AST',
+  setCompilerTab: (compilerTab) => set({ compilerTab }),
   setActiveModule: (activeModule) => set({ activeModule }),
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setActiveTab: (activeTab) => set({ activeTab }),

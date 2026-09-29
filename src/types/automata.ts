@@ -1,5 +1,3 @@
-export type AutomatonType = 'DFA' | 'NFA' | 'PDA' | 'TM';
-
 export type TMDirection = 'L' | 'R' | 'N';
 
 export interface StateNode {
@@ -17,10 +15,6 @@ export interface TransitionEdge {
   from: string;
   to: string;
   symbol: string; // 'a', 'b', 'ε', etc.
-  pushSymbol?: string; // For PDA
-  popSymbol?: string;  // For PDA
-  writeSymbol?: string; // For Turing Machine
-  direction?: TMDirection; // For Turing Machine
 }
 
 export interface TMTransitionRule {
@@ -89,7 +83,6 @@ export interface ExecutionStep {
   description: string;              // Human-readable step explanation
   activeTransitionId?: string;       // ID of edge or rule highlighted on canvas/table
   activeTransitionIds?: string[];      // Multiple active edge IDs for non-deterministic branching
-  stackState?: string[];            // Stack contents (for PDA)
   tapeState?: string[];             // Tape contents (for Turing Machine)
   tapeHeadIndex?: number;           // Tape head index (for Turing Machine)
 }

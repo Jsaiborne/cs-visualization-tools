@@ -82,7 +82,8 @@ export async function getShareableURL(): Promise<string> {
   } else if (activeModule === 'COMPILER_AST') {
     const { sourceCode } = useCompilerStore.getState();
     const scopeCode = useScopeStore.getState().sourceCode;
-    statePayload = { sourceCode, scopeCode };
+    const { compilerTab } = useUIStore.getState();
+    statePayload = { sourceCode, scopeCode, compilerTab };
   }
 
   const encodedState = statePayload ? await serializeState(statePayload) : '';
@@ -137,6 +138,9 @@ export async function loadStateFromURL(): Promise<boolean> {
           }
           if (typeof data.scopeCode === 'string') {
             useScopeStore.getState().setSourceCode(data.scopeCode);
+          }
+          if (['TOKENS', 'AST', 'TAC', 'SYMBOL_TABLE'].includes(data.compilerTab)) {
+            useUIStore.getState().setCompilerTab(data.compilerTab);
           }
         }
       }

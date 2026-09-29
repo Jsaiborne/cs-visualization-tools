@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -8,6 +8,7 @@ import {
   MarkerType,
   ReactFlowProvider,
   useReactFlow,
+  useNodesInitialized,
   applyNodeChanges,
   applyEdgeChanges,
   type Node,
@@ -21,10 +22,17 @@ import { useAutomataStore } from '../../store/useAutomataStore';
 import type { DFAConfig, NFAConfig, ExecutionStep } from '../../types/automata';
 import { isEpsilon } from '../../core/epsilon';
 import AutomataNode from './AutomataNode';
+import SelfLoopEdge from './SelfLoopEdge';
+import CurvedEdge from './CurvedEdge';
 import { BuilderToolbar } from './BuilderToolbar';
 
 const nodeTypes = {
   automataNode: AutomataNode,
+};
+
+const edgeTypes = {
+  selfLoop: SelfLoopEdge,
+  curved: CurvedEdge,
 };
 
 const NO_IDS: string[] = [];
@@ -76,6 +84,14 @@ const DFACanvasInner: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [flow]);
 
+  // Re-fit when a different machine is loaded (preset, regex, share link); edits keep the current view.
+  // The fit waits until React Flow has measured the new nodes, otherwise it uses stale bounds.
+  const nodesInitialized = useNodesInitialized();
+  const fitPending = useRef(true);
+  useEffect(() => {
+    fitPending.current = true;
+  }, [automaton.id]);
+
   // Transform Automaton states into React Flow Nodes
   const derivedNodes: Node[] = useMemo(() => {
     const activeSet = new Set(activeNFAStateIds);
@@ -108,8 +124,17 @@ const DFACanvasInner: React.FC = () => {
     const activeEdgeSet = new Set(activeEdgeIds);
     if (activeTransitionId) activeEdgeSet.add(activeTransitionId);
 
+    // Edges sharing a pair of states (either direction, or a state with itself) are spread apart
+    const pairKey = (t: { from: string; to: string }) => [t.from, t.to].sort().join('\u0000');
+    const groupSizes = new Map<string, number>();
+    for (const t of transitions) groupSizes.set(pairKey(t), (groupSizes.get(pairKey(t)) ?? 0) + 1);
+    const seen = new Map<string, number>();
+
     return transitions.map((t) => {
       const isSelfLoop = t.from === t.to;
+      const key = pairKey(t);
+      const offsetIndex = seen.get(key) ?? 0;
+      seen.set(key, offsetIndex + 1);
       const isEpsilonEdge = isEpsilon(t.symbol);
       const isEdgeActive = activeEdgeSet.has(t.id);
 
@@ -119,7 +144,8 @@ const DFACanvasInner: React.FC = () => {
         target: t.to,
         label: t.symbol,
         animated: isEdgeActive,
-        type: isSelfLoop ? 'smoothstep' : 'default',
+        type: isSelfLoop ? 'selfLoop' : 'curved',
+        data: isSelfLoop ? { loopIndex: offsetIndex } : { offsetIndex, groupSize: groupSizes.get(key) },
         style: {
           stroke: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#a855f7' : '#64748b'),
           strokeWidth: isEdgeActive ? 3 : 2,
@@ -154,6 +180,12 @@ const DFACanvasInner: React.FC = () => {
   const [edges, setEdges] = useState<Edge[]>(derivedEdges);
   useEffect(() => setNodes((prev) => preserveSelection(prev, derivedNodes)), [derivedNodes]);
   useEffect(() => setEdges((prev) => preserveSelection(prev, derivedEdges)), [derivedEdges]);
+
+  useEffect(() => {
+    if (!fitPending.current || !nodesInitialized) return;
+    fitPending.current = false;
+    flow.fitView({ padding: 0.3, duration: 200 });
+  }, [nodesInitialized, nodes, flow]);
 
   const selectedNodeId = nodes.find((n) => n.selected)?.id ?? null;
   const selectedEdgeId = selectedNodeId ? null : (edges.find((e) => e.selected)?.id ?? null);
@@ -227,12 +259,14 @@ const DFACanvasInner: React.FC = () => {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={onNodeDragStop}
         onConnect={onConnect}
         fitView
         fitViewOptions={{ padding: 0.3 }}
+        minZoom={0.2}
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#334155" gap={28} size={1} />

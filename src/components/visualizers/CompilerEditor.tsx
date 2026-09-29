@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { Code2, Sparkles, Layers, Network, Cpu, Database } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useCompilerStore } from '../../store/useCompilerStore';
+import { useUIStore } from '../../store/useUIStore';
 import { TokenStream } from './TokenStream';
 import { ASTViewer } from './ASTViewer';
 import { TACViewer } from './TACViewer';
@@ -20,7 +21,8 @@ export const CompilerEditor: React.FC = () => {
       selectedRange: state.selectedRange,
     }))
   );
-  const [rightPaneTab, setRightPaneTab] = useState<'TOKENS' | 'AST' | 'TAC' | 'SYMBOL_TABLE'>('AST');
+  const rightPaneTab = useUIStore((state) => state.compilerTab);
+  const setRightPaneTab = useUIStore((state) => state.setCompilerTab);
 
   const editorRef = useRef<CodeEditor | null>(null);
   const monacoRef = useRef<MonacoApi | null>(null);
@@ -375,6 +377,25 @@ export const CompilerEditor: React.FC = () => {
               }}
             >
               <Layers size={14} /> Token Stream
+            </button>
+            <button
+              onClick={() => setRightPaneTab('SYMBOL_TABLE')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 400,
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              <Database size={14} /> Symbol Table
             </button>
           </div>
         </div>

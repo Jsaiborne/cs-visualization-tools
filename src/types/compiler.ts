@@ -72,17 +72,3 @@ export interface TACInstruction {
     end: number;
   };
 }
-
-export interface GrammarProduction {
-  id: string;
-  lhs: string; // Left-hand non-terminal e.g. 'E'
-  rhs: string[]; // Right-hand symbols e.g. ['E', '+', 'T']
-}
-
-export interface ParsingTableEntry {
-  state: number;
-  symbol: string;
-  action: 'SHIFT' | 'REDUCE' | 'ACCEPT' | 'ERROR';
-  targetState?: number;
-  productionId?: string;
-}

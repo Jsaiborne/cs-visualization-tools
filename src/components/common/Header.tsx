@@ -27,6 +27,7 @@ export const Header: React.FC = () => {
     toastMessage: state.toastMessage,
     showToast: state.showToast
   })));
+  const compilerTab = useUIStore((state) => state.compilerTab);
   
   const automataStore = useAutomataStore(useShallow(state => ({
     isPlaying: state.isPlaying,
@@ -66,6 +67,8 @@ export const Header: React.FC = () => {
 
   const isGrammarMode = activeModule === 'GRAMMAR';
   const isScopeMode = activeModule === 'COMPILER_AST';
+  // In the compiler module only the Symbol Table tab is step-based; tokens/AST/TAC are static views
+  const hasPlayback = activeModule !== 'HOME' && (!isScopeMode || compilerTab === 'SYMBOL_TABLE');
 
   const activeStore = isGrammarMode
     ? grammarStore
@@ -103,7 +106,7 @@ export const Header: React.FC = () => {
     useAutomataStore.getState().setIsPlaying(false);
     useGrammarStore.getState().setIsPlaying(false);
     useScopeStore.getState().setIsPlaying(false);
-  }, [activeModule]);
+  }, [activeModule, compilerTab]);
 
   const handleShare = async () => {
     const url = await getShareableURL();
@@ -249,7 +252,7 @@ export const Header: React.FC = () => {
           <span>Share</span>
         </button>
 
-        {activeModule !== 'HOME' && (
+        {hasPlayback && (
           <>
             <div
               style={{
