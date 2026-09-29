@@ -3,8 +3,11 @@ import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
 import { CanvasViewport } from './components/visualizers/CanvasViewport';
 import { useUIStore } from './store/useUIStore';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 export const App: React.FC = () => {
+  useKeyboardShortcuts();
+
   // The sidebar drives the automata store, so it only belongs next to the automata-based modules;
   // the grammar and compiler views carry their own inputs and step info.
   const showSidebar = useUIStore((state) => state.activeModule === 'AUTOMATA' || state.activeModule === 'REGEX');

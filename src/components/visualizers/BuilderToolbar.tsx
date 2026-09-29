@@ -1,7 +1,11 @@
 import React from 'react';
-import { PlusCircle, PlayCircle, CheckCircle2, Trash2 } from 'lucide-react';
+import { PlusCircle, PlayCircle, CheckCircle2, Trash2, Undo2, Redo2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
+import { ExportMenu } from './ExportMenu';
+import { useCanvasImageExport } from '../../hooks/useCanvasImageExport';
+
+const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl';
 
 interface BuilderToolbarProps {
   selectedNodeId: string | null;
@@ -17,14 +21,25 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
     setStartState,
     toggleAcceptState,
     removeElement,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    automaton,
   } = useAutomataStore(
     useShallow((state) => ({
       addState: state.addState,
       setStartState: state.setStartState,
       toggleAcceptState: state.toggleAcceptState,
       removeElement: state.removeElement,
+      undo: state.undo,
+      redo: state.redo,
+      canUndo: state.past.length > 0,
+      canRedo: state.future.length > 0,
+      automaton: state.automaton,
     }))
   );
+  const exportImage = useCanvasImageExport();
 
   const handleAddState = () => {
     // Generate position with slight offset
@@ -68,6 +83,30 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         WebkitBackdropFilter: 'var(--glass-backdrop)',
       }}
     >
+      {/* Undo / Redo */}
+      <button
+        className="btn-secondary"
+        onClick={undo}
+        disabled={!canUndo}
+        title={`Undo (${MOD_KEY}+Z)`}
+        aria-label="Undo"
+        style={{ padding: '6px 8px', opacity: canUndo ? 1 : 0.4, cursor: canUndo ? 'pointer' : 'not-allowed' }}
+      >
+        <Undo2 size={15} />
+      </button>
+      <button
+        className="btn-secondary"
+        onClick={redo}
+        disabled={!canRedo}
+        title={`Redo (${MOD_KEY}+Shift+Z)`}
+        aria-label="Redo"
+        style={{ padding: '6px 8px', opacity: canRedo ? 1 : 0.4, cursor: canRedo ? 'pointer' : 'not-allowed' }}
+      >
+        <Redo2 size={15} />
+      </button>
+
+      <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)', margin: '0 4px' }} />
+
       {/* Add State Button */}
       <button
         className="btn-secondary"
@@ -135,6 +174,10 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         <Trash2 size={15} />
         <span>Delete</span>
       </button>
+
+      <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)', margin: '0 4px' }} />
+
+      <ExportMenu automaton={automaton} onImage={exportImage} />
     </div>
   );
 };

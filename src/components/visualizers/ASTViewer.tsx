@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { AlertTriangle, Network, Maximize2 } from 'lucide-react';
+import { AlertTriangle, Network, Maximize2, Download } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import type { ASTNode } from '../../types/compiler';
+import { downloadSvgElement } from '../../utils/svgExport';
 
 export const ASTViewer: React.FC = () => {
   const {
@@ -276,14 +277,25 @@ export const ASTViewer: React.FC = () => {
           </span>
         </div>
 
-        <button
-          className="btn-secondary"
-          onClick={handleResetZoom}
-          title="Reset Zoom & Pan View"
-          style={{ padding: '4px 8px', fontSize: '11px' }}
-        >
-          <Maximize2 size={12} /> Center View
-        </button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            className="btn-secondary"
+            onClick={() => svgRef.current && downloadSvgElement(svgRef.current, 'syntax-tree.svg')}
+            disabled={!ast}
+            title="Download the tree as an SVG image"
+            style={{ padding: '4px 8px', fontSize: '11px' }}
+          >
+            <Download size={12} /> Export SVG
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={handleResetZoom}
+            title="Reset Zoom & Pan View"
+            style={{ padding: '4px 8px', fontSize: '11px' }}
+          >
+            <Maximize2 size={12} /> Center View
+          </button>
+        </div>
       </div>
 
       {/* Parse Error Display */}

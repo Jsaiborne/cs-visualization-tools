@@ -128,6 +128,13 @@ html, body, #root {
 }
 
 /* Mobile Responsiveness Rules (max-width: 768px) */
+/* Secondary header text gives way to the module tabs on narrower screens */
+@media (max-width: 1440px) {
+  .header-wide-only {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .glass-header {
     flex-direction: column !important;

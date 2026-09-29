@@ -1,8 +1,5 @@
-import { useUIStore, type ActiveModule } from '../store/useUIStore';
-import { useAutomataStore } from '../store/useAutomataStore';
-import { useGrammarStore } from '../store/useGrammarStore';
-import { useCompilerStore } from '../store/useCompilerStore';
-import { useScopeStore } from '../store/useScopeStore';
+import { useUIStore } from '../store/useUIStore';
+import { captureModuleState, applyModuleState, isActiveModule } from './moduleState';
 
 // Payload formats: 'z.' + deflate-raw + base64url (current), 'j.' + base64url JSON
 // (browsers without CompressionStream), or an unprefixed legacy btoa(encodeURIComponent(json)).
@@ -71,20 +68,7 @@ export async function deserializeState<T>(encoded: string): Promise<T | null> {
  */
 export async function getShareableURL(): Promise<string> {
   const activeModule = useUIStore.getState().activeModule;
-  let statePayload: unknown = null;
-
-  if (activeModule === 'AUTOMATA' || activeModule === 'REGEX') {
-    const { automaton, testInput } = useAutomataStore.getState();
-    statePayload = { automaton, testInput };
-  } else if (activeModule === 'GRAMMAR') {
-    const { grammarText, testInput } = useGrammarStore.getState();
-    statePayload = { grammarText, testInput };
-  } else if (activeModule === 'COMPILER_AST') {
-    const { sourceCode } = useCompilerStore.getState();
-    const scopeCode = useScopeStore.getState().sourceCode;
-    const { compilerTab } = useUIStore.getState();
-    statePayload = { sourceCode, scopeCode, compilerTab };
-  }
+  const statePayload = captureModuleState(activeModule);
 
   const encodedState = statePayload ? await serializeState(statePayload) : '';
   const url = new URL(window.location.href);
@@ -106,44 +90,14 @@ export async function getShareableURL(): Promise<string> {
 export async function loadStateFromURL(): Promise<boolean> {
   try {
     const params = new URLSearchParams(window.location.search);
-    const moduleParam = params.get('module') as ActiveModule | null;
+    const moduleParam = params.get('module');
     const stateParam = params.get('state');
 
-    if (!moduleParam) return false;
-
-    // Set active module in UI store
-    const validModules: ActiveModule[] = ['HOME', 'AUTOMATA', 'REGEX', 'GRAMMAR', 'COMPILER_AST'];
-    if (validModules.includes(moduleParam)) {
-      useUIStore.getState().setActiveModule(moduleParam);
-    }
+    if (!isActiveModule(moduleParam)) return false;
+    useUIStore.getState().setActiveModule(moduleParam);
 
     if (stateParam) {
-      const data = await deserializeState<any>(stateParam);
-      if (data && typeof data === 'object') {
-        if (data.automaton && typeof data.automaton === 'object' && Array.isArray(data.automaton.states) && (moduleParam === 'AUTOMATA' || moduleParam === 'REGEX')) {
-          if (typeof data.testInput === 'string') {
-            useAutomataStore.getState().setTestInput(data.testInput);
-          }
-          useAutomataStore.getState().setAutomaton(data.automaton);
-        }
-        if (typeof data.grammarText === 'string' && moduleParam === 'GRAMMAR') {
-          useGrammarStore.getState().setGrammarText(data.grammarText);
-          if (typeof data.testInput === 'string') {
-            useGrammarStore.getState().setTestInput(data.testInput);
-          }
-        }
-        if (moduleParam === 'COMPILER_AST') {
-          if (typeof data.sourceCode === 'string') {
-            useCompilerStore.getState().setSourceCode(data.sourceCode);
-          }
-          if (typeof data.scopeCode === 'string') {
-            useScopeStore.getState().setSourceCode(data.scopeCode);
-          }
-          if (['TOKENS', 'AST', 'TAC', 'SYMBOL_TABLE'].includes(data.compilerTab)) {
-            useUIStore.getState().setCompilerTab(data.compilerTab);
-          }
-        }
-      }
+      applyModuleState(moduleParam, await deserializeState(stateParam));
     }
     return true;
   } catch (err) {

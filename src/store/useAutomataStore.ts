@@ -120,6 +120,26 @@ function recompute(draft: AutomataState) {
   draft.isPlaying = false;
 }
 
+const HISTORY_LIMIT = 50;
+
+type SetAutomataState = (fn: (state: AutomataState) => AutomataState | Partial<AutomataState>) => void;
+
+/**
+ * Applies an edit to the machine. When the automaton actually changes, the previous version goes
+ * onto the undo stack and the redo stack is cleared; no-op edits leave history untouched.
+ */
+function commit(set: SetAutomataState, recipe: (draft: AutomataState) => void) {
+  set((state) => {
+    const next = produce(state, recipe);
+    if (next.automaton === state.automaton) return next;
+    return {
+      ...next,
+      past: [...state.past, state.automaton].slice(-HISTORY_LIMIT),
+      future: [],
+    };
+  });
+}
+
 /** Smallest `qN` id not already used by a state. */
 function nextStateId(states: StateNode[]): string {
   const used = new Set(states.map((s) => s.id));
@@ -181,6 +201,12 @@ interface AutomataState extends PlaybackState {
   executionSteps: ExecutionStep[];
   validationErrors: string[];
 
+  // Undo/redo history of machine definitions (most recent last in `past`)
+  past: AutomatonDefinition[];
+  future: AutomatonDefinition[];
+  undo: () => void;
+  redo: () => void;
+
   // Time-Travel Reducers
   setAutomaton: (def: AutomatonDefinition) => void;
   setTestInput: (input: string) => void;
@@ -225,16 +251,33 @@ export const useAutomataStore = create<AutomataState>((set) => ({
   testInput: '10010',
   executionSteps: initialSteps,
   validationErrors: initialErrors,
+  past: [],
+  future: [],
+
+  undo: () =>
+    set((state) => {
+      const previous = state.past[state.past.length - 1];
+      if (!previous) return {};
+      return produce(
+        { ...state, automaton: previous, past: state.past.slice(0, -1), future: [state.automaton, ...state.future] },
+        recompute
+      );
+    }),
+
+  redo: () =>
+    set((state) => {
+      const [next, ...rest] = state.future;
+      if (!next) return {};
+      return produce({ ...state, automaton: next, past: [...state.past, state.automaton], future: rest }, recompute);
+    }),
 
   runSimulation: () => set(produce((draft: AutomataState) => recompute(draft))),
 
   setAutomaton: (def) =>
-    set(
-      produce((draft: AutomataState) => {
-        draft.automaton = def;
-        recompute(draft);
-      })
-    ),
+    commit(set, (draft) => {
+      draft.automaton = def;
+      recompute(draft);
+    }),
 
   setTestInput: (input) =>
     set(
@@ -246,180 +289,164 @@ export const useAutomataStore = create<AutomataState>((set) => ({
 
   // Builder Actions
   addState: (customId, x = 250, y = 200) =>
-    set(
-      produce((draft: AutomataState) => {
-        const states = draft.automaton.states;
-        const newId = customId && !states.some((s) => s.id === customId) ? customId : nextStateId(states);
-        const isFirst = states.length === 0;
+    commit(set, (draft) => {
+      const states = draft.automaton.states;
+      const newId = customId && !states.some((s) => s.id === customId) ? customId : nextStateId(states);
+      const isFirst = states.length === 0;
 
-        states.push({
-          id: newId,
-          label: newId,
-          isStart: isFirst,
-          isAccept: false,
-          x,
-          y,
-        });
-        if (isFirst) {
-          draft.automaton.startStateId = newId;
-        }
-        recompute(draft);
-      })
-    ),
+      states.push({
+        id: newId,
+        label: newId,
+        isStart: isFirst,
+        isAccept: false,
+        x,
+        y,
+      });
+      if (isFirst) {
+        draft.automaton.startStateId = newId;
+      }
+      recompute(draft);
+    }),
 
   removeElement: (id) =>
-    set(
-      produce((draft: AutomataState) => {
-        const automaton = draft.automaton;
-        const stateIdx = automaton.states.findIndex((s) => s.id === id);
+    commit(set, (draft) => {
+      const automaton = draft.automaton;
+      const stateIdx = automaton.states.findIndex((s) => s.id === id);
 
-        if (stateIdx !== -1) {
-          automaton.states.splice(stateIdx, 1);
+      if (stateIdx !== -1) {
+        automaton.states.splice(stateIdx, 1);
 
-          if (automaton.type === 'TM') {
-            automaton.transitions = automaton.transitions.filter(
-              (t) => t.fromState !== id && t.nextState !== id
-            );
-            if (automaton.acceptStateId === id) automaton.acceptStateId = '';
-            if (automaton.rejectStateId === id) automaton.rejectStateId = undefined;
-          } else {
-            automaton.transitions = automaton.transitions.filter((t) => t.from !== id && t.to !== id);
-            automaton.acceptStateIds = automaton.acceptStateIds.filter((accId) => accId !== id);
-          }
-
-          if (automaton.startStateId === id) {
-            automaton.startStateId = automaton.states[0]?.id || '';
-            automaton.states.forEach((s) => {
-              s.isStart = s.id === automaton.startStateId;
-            });
-          }
-        } else if (automaton.type === 'TM') {
-          automaton.transitions = automaton.transitions.filter((r) => r.id !== id);
-        } else {
-          // Not a state: treat the id as an edge
-          automaton.transitions = automaton.transitions.filter((t) => t.id !== id);
-        }
-
-        recompute(draft);
-      })
-    ),
-
-  addEdge: (source, target, symbolInput) =>
-    set(
-      produce((draft: AutomataState) => {
-        const automaton = draft.automaton;
-        if (automaton.type === 'TM') return;
-
-        // "0, 1" creates one edge per symbol
-        const symbols = Array.from(
-          new Set(symbolInput.split(',').map((sym) => sym.trim()).filter(Boolean))
-        );
-
-        for (const symbol of symbols) {
-          if (automaton.type === 'DFA') {
-            // A DFA has at most one edge per (state, symbol): replace any existing one
-            automaton.transitions = automaton.transitions.filter(
-              (t) => !(t.from === source && t.symbol === symbol)
-            );
-          } else if (automaton.transitions.some((t) => t.from === source && t.to === target && t.symbol === symbol)) {
-            continue;
-          }
-
-          automaton.transitions.push({
-            id: `t_${source}_${target}_${symbol}_${Date.now()}`,
-            from: source,
-            to: target,
-            symbol,
-          });
-
-          if (!isEpsilon(symbol) && !automaton.alphabet.includes(symbol)) {
-            automaton.alphabet.push(symbol);
-          }
-        }
-
-        recompute(draft);
-      })
-    ),
-
-  toggleAcceptState: (id) =>
-    set(
-      produce((draft: AutomataState) => {
-        const automaton = draft.automaton;
-        const state = automaton.states.find((s) => s.id === id);
-        if (!state) return;
-
-        state.isAccept = !state.isAccept;
         if (automaton.type === 'TM') {
-          // A TM has exactly one accept state
-          if (state.isAccept) {
-            automaton.states.forEach((s) => {
-              if (s.id !== id) s.isAccept = false;
-            });
-            automaton.acceptStateId = id;
-          } else if (automaton.acceptStateId === id) {
-            automaton.acceptStateId = '';
-          }
-        } else if (state.isAccept) {
-          if (!automaton.acceptStateIds.includes(id)) automaton.acceptStateIds.push(id);
+          automaton.transitions = automaton.transitions.filter(
+            (t) => t.fromState !== id && t.nextState !== id
+          );
+          if (automaton.acceptStateId === id) automaton.acceptStateId = '';
+          if (automaton.rejectStateId === id) automaton.rejectStateId = undefined;
         } else {
+          automaton.transitions = automaton.transitions.filter((t) => t.from !== id && t.to !== id);
           automaton.acceptStateIds = automaton.acceptStateIds.filter((accId) => accId !== id);
         }
 
-        recompute(draft);
-      })
-    ),
+        if (automaton.startStateId === id) {
+          automaton.startStateId = automaton.states[0]?.id || '';
+          automaton.states.forEach((s) => {
+            s.isStart = s.id === automaton.startStateId;
+          });
+        }
+      } else if (automaton.type === 'TM') {
+        automaton.transitions = automaton.transitions.filter((r) => r.id !== id);
+      } else {
+        // Not a state: treat the id as an edge
+        automaton.transitions = automaton.transitions.filter((t) => t.id !== id);
+      }
+
+      recompute(draft);
+    }),
+
+  addEdge: (source, target, symbolInput) =>
+    commit(set, (draft) => {
+      const automaton = draft.automaton;
+      if (automaton.type === 'TM') return;
+
+      // "0, 1" creates one edge per symbol
+      const symbols = Array.from(
+        new Set(symbolInput.split(',').map((sym) => sym.trim()).filter(Boolean))
+      );
+
+      for (const symbol of symbols) {
+        if (automaton.type === 'DFA') {
+          // A DFA has at most one edge per (state, symbol): replace any existing one
+          automaton.transitions = automaton.transitions.filter(
+            (t) => !(t.from === source && t.symbol === symbol)
+          );
+        } else if (automaton.transitions.some((t) => t.from === source && t.to === target && t.symbol === symbol)) {
+          continue;
+        }
+
+        automaton.transitions.push({
+          id: `t_${source}_${target}_${symbol}_${Date.now()}`,
+          from: source,
+          to: target,
+          symbol,
+        });
+
+        if (!isEpsilon(symbol) && !automaton.alphabet.includes(symbol)) {
+          automaton.alphabet.push(symbol);
+        }
+      }
+
+      recompute(draft);
+    }),
+
+  toggleAcceptState: (id) =>
+    commit(set, (draft) => {
+      const automaton = draft.automaton;
+      const state = automaton.states.find((s) => s.id === id);
+      if (!state) return;
+
+      state.isAccept = !state.isAccept;
+      if (automaton.type === 'TM') {
+        // A TM has exactly one accept state
+        if (state.isAccept) {
+          automaton.states.forEach((s) => {
+            if (s.id !== id) s.isAccept = false;
+          });
+          automaton.acceptStateId = id;
+        } else if (automaton.acceptStateId === id) {
+          automaton.acceptStateId = '';
+        }
+      } else if (state.isAccept) {
+        if (!automaton.acceptStateIds.includes(id)) automaton.acceptStateIds.push(id);
+      } else {
+        automaton.acceptStateIds = automaton.acceptStateIds.filter((accId) => accId !== id);
+      }
+
+      recompute(draft);
+    }),
 
   setStartState: (id) =>
-    set(
-      produce((draft: AutomataState) => {
-        if (!draft.automaton.states.some((s) => s.id === id)) return;
-        draft.automaton.startStateId = id;
-        draft.automaton.states.forEach((s) => {
-          s.isStart = s.id === id;
-        });
-        recompute(draft);
-      })
-    ),
+    commit(set, (draft) => {
+      if (!draft.automaton.states.some((s) => s.id === id)) return;
+      draft.automaton.startStateId = id;
+      draft.automaton.states.forEach((s) => {
+        s.isStart = s.id === id;
+      });
+      recompute(draft);
+    }),
 
   updateNodePosition: (id, x, y) =>
-    set(
-      produce((draft: AutomataState) => {
-        const state = draft.automaton.states.find((s) => s.id === id);
-        if (state) {
-          state.x = x;
-          state.y = y;
-        }
-      })
-    ),
+    commit(set, (draft) => {
+      const state = draft.automaton.states.find((s) => s.id === id);
+      if (state) {
+        state.x = x;
+        state.y = y;
+      }
+    }),
 
   addTMRule: (rule) =>
-    set(
-      produce((draft: AutomataState) => {
-        if (draft.automaton.type !== 'TM') return;
-        const tm = draft.automaton;
-        const newRule: TMTransitionRule = {
-          ...rule,
-          id: `rule_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        };
-        // Overwrite rule for same (fromState, read) if exists
-        const existingIdx = tm.transitions.findIndex(
-          (r) => r.fromState === rule.fromState && r.read === rule.read
-        );
-        if (existingIdx !== -1) {
-          tm.transitions[existingIdx] = newRule;
-        } else {
-          tm.transitions.push(newRule);
-        }
-        recompute(draft);
-      })
-    ),
+    commit(set, (draft) => {
+      if (draft.automaton.type !== 'TM') return;
+      const tm = draft.automaton;
+      const newRule: TMTransitionRule = {
+        ...rule,
+        id: `rule_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      };
+      // Overwrite rule for same (fromState, read) if exists
+      const existingIdx = tm.transitions.findIndex(
+        (r) => r.fromState === rule.fromState && r.read === rule.read
+      );
+      if (existingIdx !== -1) {
+        tm.transitions[existingIdx] = newRule;
+      } else {
+        tm.transitions.push(newRule);
+      }
+      recompute(draft);
+    }),
 
   removeTMRule: (ruleId) =>
-    set(
-      produce((draft: AutomataState) => {
-        if (draft.automaton.type !== 'TM') return;
-        draft.automaton.transitions = draft.automaton.transitions.filter((r) => r.id !== ruleId);
-        recompute(draft);
-      })
-    ),
+    commit(set, (draft) => {
+      if (draft.automaton.type !== 'TM') return;
+      draft.automaton.transitions = draft.automaton.transitions.filter((r) => r.id !== ruleId);
+      recompute(draft);
+    }),
 }));

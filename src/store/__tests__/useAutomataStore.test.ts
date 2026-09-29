@@ -8,6 +8,7 @@ const dfa = () => store().automaton as DFAConfig;
 beforeEach(() => {
   store().setTestInput('10010');
   store().setAutomaton(defaultDFA);
+  useAutomataStore.setState({ past: [], future: [] });
 });
 
 describe('automata builder actions', () => {
@@ -56,5 +57,45 @@ describe('automata builder actions', () => {
     const tm = store().automaton;
     expect(tm.type === 'TM' && tm.acceptStateId).toBe('q0');
     expect(tm.states.filter((s) => s.isAccept).map((s) => s.id)).toEqual(['q0']);
+  });
+});
+
+describe('undo / redo', () => {
+  it('restores the exact previous machine and re-runs the simulation', () => {
+    const before = store().automaton;
+    store().addState();
+    store().removeElement('t0');
+    expect(store().past).toHaveLength(2);
+
+    store().undo();
+    store().undo();
+    expect(store().automaton).toEqual(before);
+    expect(store().executionSteps.length).toBeGreaterThan(0);
+    expect(store().currentStepIndex).toBe(0);
+
+    store().redo();
+    expect(dfa().states.map((s) => s.id)).toEqual(['q0', 'q1', 'q2']);
+    expect(store().future).toHaveLength(1);
+  });
+
+  it('clears redo after a new edit and ignores no-op edits', () => {
+    store().addState();
+    store().undo();
+    store().setStartState('does-not-exist');
+    expect(store().future).toHaveLength(1);
+    store().toggleAcceptState('q1');
+    expect(store().future).toHaveLength(0);
+  });
+
+  it('does nothing when there is nothing to undo or redo', () => {
+    const before = store().automaton;
+    store().undo();
+    store().redo();
+    expect(store().automaton).toBe(before);
+  });
+
+  it('caps history at 50 entries', () => {
+    for (let i = 0; i < 60; i++) store().updateNodePosition('q0', i, i);
+    expect(store().past).toHaveLength(50);
   });
 });

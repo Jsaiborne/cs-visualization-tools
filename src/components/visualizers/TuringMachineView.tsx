@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore, defaultTM, binaryIncrementerTM } from '../../store/useAutomataStore';
 import { TuringMachineTape } from './TuringMachineTape';
 import { TuringMachineTable } from './TuringMachineTable';
+import { ExportMenu } from './ExportMenu';
 
 export const TuringMachineView: React.FC = () => {
   const {
@@ -142,6 +143,7 @@ export const TuringMachineView: React.FC = () => {
             >
               <RotateCcw size={13} /> Reload
             </button>
+            <ExportMenu automaton={automaton} />
           </div>
         </div>
       </div>

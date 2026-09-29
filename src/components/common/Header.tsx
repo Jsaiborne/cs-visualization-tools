@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import {
   Cpu,
   Network,
@@ -12,6 +12,8 @@ import {
   Home,
   Share2,
   CheckCircle2,
+  Library,
+  Keyboard,
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useUIStore, type ActiveModule } from '../../store/useUIStore';
@@ -19,6 +21,9 @@ import { useAutomataStore } from '../../store/useAutomataStore';
 import { useGrammarStore } from '../../store/useGrammarStore';
 import { useScopeStore } from '../../store/useScopeStore';
 import { getShareableURL } from '../../utils/urlState';
+
+const LibraryPanel = lazy(() => import('./LibraryPanel'));
+const ShortcutsHelp = lazy(() => import('./ShortcutsHelp'));
 
 export const Header: React.FC = () => {
   const { activeModule, setActiveModule, toastMessage, showToast } = useUIStore(useShallow(state => ({
@@ -28,6 +33,7 @@ export const Header: React.FC = () => {
     showToast: state.showToast
   })));
   const compilerTab = useUIStore((state) => state.compilerTab);
+  const [openDialog, setOpenDialog] = useState<'library' | 'shortcuts' | null>(null);
   
   const automataStore = useAutomataStore(useShallow(state => ({
     isPlaying: state.isPlaying,
@@ -191,12 +197,12 @@ export const Header: React.FC = () => {
         </div>
         <div>
           <h1
-            style={{ fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}
+            style={{ fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}
             className="gradient-text"
           >
             TOC & Compiler Suite
           </h1>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
+          <p className="header-wide-only" style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
             Interactive Theory of Computation Platform
           </p>
         </div>
@@ -241,6 +247,26 @@ export const Header: React.FC = () => {
 
       {/* Controls & Share Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          className="btn-secondary"
+          onClick={() => setOpenDialog('shortcuts')}
+          title="Keyboard shortcuts"
+          aria-label="Keyboard shortcuts"
+          style={{ padding: '7px 9px' }}
+        >
+          <Keyboard size={15} />
+        </button>
+
+        <button
+          className="btn-secondary"
+          onClick={() => setOpenDialog('library')}
+          title="Save, load, import and export your work"
+          style={{ padding: '7px 12px', fontSize: '12px', gap: '6px' }}
+        >
+          <Library size={15} color="var(--accent-purple)" />
+          <span className="header-wide-only">Library</span>
+        </button>
+
         {/* Share Button */}
         <button
           className="btn-secondary"
@@ -249,7 +275,7 @@ export const Header: React.FC = () => {
           style={{ padding: '7px 12px', fontSize: '12px', gap: '6px' }}
         >
           <Share2 size={15} color="var(--accent-blue)" />
-          <span>Share</span>
+          <span className="header-wide-only">Share</span>
         </button>
 
         {hasPlayback && (
@@ -264,6 +290,7 @@ export const Header: React.FC = () => {
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--accent-blue)',
                 fontWeight: 600,
+                whiteSpace: 'nowrap',
               }}
             >
               Step {currentStepIndex + 1} / {totalSteps || 1}
@@ -314,6 +341,10 @@ export const Header: React.FC = () => {
           </>
         )}
       </div>
+      <Suspense fallback={null}>
+        {openDialog === 'library' && <LibraryPanel onClose={() => setOpenDialog(null)} />}
+        {openDialog === 'shortcuts' && <ShortcutsHelp onClose={() => setOpenDialog(null)} />}
+      </Suspense>
     </header>
   );
 };
