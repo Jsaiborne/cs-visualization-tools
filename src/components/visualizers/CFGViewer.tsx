@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import {
   Layers,
   Table,
@@ -7,10 +7,45 @@ import {
   BookOpen,
   ArrowRight,
   Zap,
+  GitBranch,
+  Wand2,
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGrammarStore, PRESET_GRAMMARS } from '../../store/useGrammarStore';
 import { END_MARKER } from '../../types/cfg';
+import { findLeftRecursion, findCommonPrefixes } from '../../core/compiler/grammarTransforms';
+import ParseTreeView from './ParseTreeView';
+import type { GrammarTransform } from './GrammarTransformDialog';
+
+const GrammarTransformDialog = lazy(() => import('./GrammarTransformDialog'));
+
+const smallButton: React.CSSProperties = {
+  display: 'flex',
+  whiteSpace: 'nowrap',
+  alignItems: 'center',
+  gap: '4px',
+  padding: '3px 8px',
+  fontSize: '11px',
+  borderRadius: '5px',
+  border: '1px solid var(--border-subtle)',
+  background: 'rgba(30, 41, 59, 0.6)',
+  color: 'var(--text-primary)',
+  cursor: 'pointer',
+};
+
+const tabButton = (active: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '4px 10px',
+  fontSize: '12px',
+  fontWeight: active ? 700 : 500,
+  borderRadius: '6px',
+  border: 'none',
+  background: active ? 'var(--accent-blue)' : 'transparent',
+  color: active ? '#0f172a' : 'var(--text-secondary)',
+  cursor: 'pointer',
+});
 
 export const CFGViewer: React.FC = () => {
   const {
@@ -23,6 +58,7 @@ export const CFGViewer: React.FC = () => {
     executionSteps,
     currentStepIndex,
     parseError,
+    parseTree,
     setGrammarText,
     setTestInput,
     loadPreset,
@@ -37,6 +73,7 @@ export const CFGViewer: React.FC = () => {
       executionSteps: state.executionSteps,
       currentStepIndex: state.currentStepIndex,
       parseError: state.parseError,
+      parseTree: state.parseTree,
       setGrammarText: state.setGrammarText,
       setTestInput: state.setTestInput,
       loadPreset: state.loadPreset,
@@ -44,6 +81,13 @@ export const CFGViewer: React.FC = () => {
   );
 
   const currentStep = executionSteps[currentStepIndex] || null;
+  const [centerTab, setCenterTab] = useState<'table' | 'tree'>('table');
+  const [transform, setTransform] = useState<GrammarTransform | null>(null);
+  const treeRoots = useMemo(() => (parseTree.root ? [parseTree.root] : []), [parseTree]);
+
+  // Why the grammar isn't LL(1), when the cause is one the transforms can fix
+  const leftRecursive = useMemo(() => findLeftRecursion(grammar), [grammar]);
+  const commonPrefixes = useMemo(() => findCommonPrefixes(grammar), [grammar]);
 
   // Active lookup cell during simulation step
   const activeCell = currentStep?.highlightCell || null;
@@ -158,11 +202,18 @@ export const CFGViewer: React.FC = () => {
               overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                 <Zap size={14} color="var(--accent-cyan)" /> Context-Free Grammar
               </span>
-              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>S -&gt; A B | ε</span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button onClick={() => setTransform('left-recursion')} title="Remove left recursion, step by step" style={smallButton}>
+                  <Wand2 size={11} /> Left recursion
+                </button>
+                <button onClick={() => setTransform('left-factor')} title="Factor out common prefixes, step by step" style={smallButton}>
+                  <Wand2 size={11} /> Left-factor
+                </button>
+              </div>
             </div>
 
             <textarea
@@ -302,11 +353,13 @@ export const CFGViewer: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Table size={16} color="var(--accent-blue)" />
-              <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>
-                2D LL(1) Parsing Table
-              </h3>
+            <div role="tablist" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button role="tab" aria-selected={centerTab === 'table'} onClick={() => setCenterTab('table')} style={tabButton(centerTab === 'table')}>
+                <Table size={14} /> LL(1) Table
+              </button>
+              <button role="tab" aria-selected={centerTab === 'tree'} onClick={() => setCenterTab('tree')} style={tabButton(centerTab === 'tree')}>
+                <GitBranch size={14} /> Parse Tree
+              </button>
             </div>
 
             {ll1Table.conflicts.length > 0 ? (
@@ -344,7 +397,55 @@ export const CFGViewer: React.FC = () => {
             )}
           </div>
 
-          {/* Table Container */}
+          {ll1Table.conflicts.length > 0 && (leftRecursive.length > 0 || commonPrefixes.length > 0) && (
+            <div
+              style={{
+                marginBottom: '10px',
+                padding: '8px 10px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+              }}
+            >
+              {leftRecursive.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>
+                    <strong>{leftRecursive.join(', ')}</strong> {leftRecursive.length === 1 ? 'is' : 'are'} left-recursive, which LL(1) can't handle.
+                  </span>
+                  <button onClick={() => setTransform('left-recursion')} style={smallButton}>
+                    <Wand2 size={11} /> Remove left recursion
+                  </button>
+                </div>
+              )}
+              {commonPrefixes.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>
+                    <strong>{commonPrefixes.join(', ')}</strong> {commonPrefixes.length === 1 ? 'has' : 'have'} alternatives starting with the same symbol.
+                  </span>
+                  <button onClick={() => setTransform('left-factor')} style={smallButton}>
+                    <Wand2 size={11} /> Left-factor
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {centerTab === 'tree' ? (
+            <div style={{ flex: 1, minHeight: 0, border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
+              <ParseTreeView
+                roots={treeRoots}
+                step={currentStepIndex}
+                activeNodeId={parseTree.activeNodeByStep[currentStepIndex]}
+                title="LL(1) Parse Tree (top-down)"
+                emptyMessage="Enter a grammar to build a parse tree."
+              />
+            </div>
+          ) : (
+          /* Table Container */
           <div
             style={{
               flex: 1,
@@ -447,6 +548,7 @@ export const CFGViewer: React.FC = () => {
               </tbody>
             </table>
           </div>
+          )}
 
           {/* Action Trace Banner */}
           <div
@@ -618,6 +720,9 @@ export const CFGViewer: React.FC = () => {
           </div>
         </div>
       </div>
+      <Suspense fallback={null}>
+        {transform && <GrammarTransformDialog transform={transform} onClose={() => setTransform(null)} />}
+      </Suspense>
     </div>
   );
 };

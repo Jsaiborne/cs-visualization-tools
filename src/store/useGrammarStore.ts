@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { produce } from 'immer';
 import type {
   Grammar,
   LL1Table,
@@ -11,6 +10,7 @@ import {
   calculateFollowSets,
 } from '../core/compiler/cfgEngine';
 import { generateLL1Table, simulateLL1 } from '../core/compiler/ll1Parser';
+import { buildLL1ParseTree, type ParseTreeResult } from '../core/compiler/parseTree';
 import { createPlaybackSlice, type PlaybackState } from './playback';
 
 export interface GrammarPreset {
@@ -55,6 +55,8 @@ interface GrammarState extends PlaybackState {
   followSets: Record<string, string[]>;
   ll1Table: LL1Table;
   executionSteps: LL1ExecutionStep[];
+  /** Parse tree built from the LL(1) trace, revealed step by step */
+  parseTree: ParseTreeResult;
   parseError: string | null;
 
   setGrammarText: (text: string) => void;
@@ -88,18 +90,27 @@ function computeGrammarState(grammarText: string, testInput: string) {
   }
 
   const ll1Table = generateLL1Table(grammar, rawFirstSets, rawFollowSets);
-  const executionSteps = simulateLL1(grammar, ll1Table, testInput);
 
   return {
     grammarText,
-    testInput,
     grammar,
     firstSets,
     followSets,
     ll1Table,
-    executionSteps,
-    currentStepIndex: 0,
     parseError,
+    ...computeParse(grammar, ll1Table, testInput),
+  };
+}
+
+/** The parts that depend on the test input: the LL(1) trace and its parse tree. */
+function computeParse(grammar: Grammar, ll1Table: LL1Table, testInput: string) {
+  const executionSteps = simulateLL1(grammar, ll1Table, testInput);
+  return {
+    testInput,
+    executionSteps,
+    parseTree: buildLL1ParseTree(executionSteps, grammar),
+    currentStepIndex: 0,
+    isPlaying: false,
   };
 }
 
@@ -109,68 +120,14 @@ export const useGrammarStore = create<GrammarState>((set, get) => ({
   ...createPlaybackSlice<GrammarState>(set, (state) => state.executionSteps.length),
   ...initialComputed,
 
-  setGrammarText: (text: string) => {
-    set(
-      produce((draft: GrammarState) => {
-        const computed = computeGrammarState(text, draft.testInput);
-        draft.grammarText = computed.grammarText;
-        draft.grammar = computed.grammar;
-        draft.firstSets = computed.firstSets;
-        draft.followSets = computed.followSets;
-        draft.ll1Table = computed.ll1Table;
-        draft.executionSteps = computed.executionSteps;
-        draft.currentStepIndex = 0;
-        draft.parseError = computed.parseError;
-        draft.isPlaying = false;
-      })
-    );
-  },
+  setGrammarText: (text: string) => set(computeGrammarState(text, get().testInput)),
 
-  setTestInput: (input: string) => {
-    set(
-      produce((draft: GrammarState) => {
-        draft.testInput = input;
-        const steps = simulateLL1(draft.grammar, draft.ll1Table, input);
-        draft.executionSteps = steps;
-        draft.currentStepIndex = 0;
-        draft.isPlaying = false;
-      })
-    );
-  },
+  setTestInput: (input: string) => set(computeParse(get().grammar, get().ll1Table, input)),
 
   loadPreset: (presetId: string) => {
     const preset = PRESET_GRAMMARS.find((p) => p.id === presetId);
-    if (!preset) return;
-    set(
-      produce((draft: GrammarState) => {
-        const computed = computeGrammarState(preset.grammarText, preset.testInput);
-        draft.grammarText = computed.grammarText;
-        draft.testInput = computed.testInput;
-        draft.grammar = computed.grammar;
-        draft.firstSets = computed.firstSets;
-        draft.followSets = computed.followSets;
-        draft.ll1Table = computed.ll1Table;
-        draft.executionSteps = computed.executionSteps;
-        draft.currentStepIndex = 0;
-        draft.parseError = computed.parseError;
-        draft.isPlaying = false;
-      })
-    );
+    if (preset) set(computeGrammarState(preset.grammarText, preset.testInput));
   },
 
-  recompute: () => {
-    const { grammarText, testInput } = get();
-    set(
-      produce((draft: GrammarState) => {
-        const computed = computeGrammarState(grammarText, testInput);
-        draft.grammar = computed.grammar;
-        draft.firstSets = computed.firstSets;
-        draft.followSets = computed.followSets;
-        draft.ll1Table = computed.ll1Table;
-        draft.executionSteps = computed.executionSteps;
-        draft.currentStepIndex = 0;
-        draft.parseError = computed.parseError;
-      })
-    );
-  },
+  recompute: () => set(computeGrammarState(get().grammarText, get().testInput)),
 }));
