@@ -278,6 +278,7 @@ export function compileRegexToNFA(regexString: string): NFAConfig {
   return {
     id: `nfa_regex_${Date.now()}`,
     name: `NFA from Regex: /${regexString}/`,
+    regex: regexString,
     type: 'NFA',
     alphabet,
     startStateId: fragment.start.id,

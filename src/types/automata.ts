@@ -52,6 +52,7 @@ export interface NFAConfig {
   transitionTable?: NFATransitionTable;
   startStateId: string;
   acceptStateIds: string[];
+  regex?: string; // Source expression when compiled by Thompson's construction
 }
 
 export interface TMConfig {
