@@ -1,6 +1,7 @@
 import type { NFAConfig, StateNode, TransitionEdge } from '../../types/automata';
 
 import { EPSILON } from '../epsilon';
+import { layoutStates } from './layout';
 
 const POSTFIX_OPERATORS = new Set(['*', '+', '?']);
 
@@ -206,40 +207,6 @@ export function buildThompsonNFA(postfix: string[]): NFAFragment {
   return stack[0];
 }
 
-import dagre from '@dagrejs/dagre';
-
-/**
- * Computes deterministic auto-layout coordinates for NFA nodes from left to right using Dagre.
- */
-export function layoutNFA(
-  states: StateNode[],
-  transitions: TransitionEdge[],
-  _startStateId: string
-): StateNode[] {
-  const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: 'LR', nodesep: 70, ranksep: 120, marginx: 80, marginy: 80 });
-  g.setDefaultEdgeLabel(() => ({}));
-
-  states.forEach((state) => {
-    g.setNode(state.id, { width: 72, height: 72 });
-  });
-
-  transitions.forEach((trans) => {
-    g.setEdge(trans.from, trans.to);
-  });
-
-  dagre.layout(g);
-
-  return states.map((s) => {
-    const node = g.node(s.id);
-    return {
-      ...s,
-      x: node ? Math.round(node.x) : 100,
-      y: node ? Math.round(node.y) : 100,
-    };
-  });
-}
-
 /**
  * Pure compiler function: Regex String -> Strongly-typed NFAConfig with Auto-Layout.
  *
@@ -273,7 +240,7 @@ export function compileRegexToNFA(regexString: string): NFAConfig {
   const alphabet = Array.from(alphabetSet);
 
   // Apply auto-layout
-  const layoutStates = layoutNFA(fragment.states, fragment.transitions, fragment.start.id);
+  const positioned = layoutStates(fragment.states, fragment.transitions);
 
   return {
     id: `nfa_regex_${Date.now()}`,
@@ -283,7 +250,7 @@ export function compileRegexToNFA(regexString: string): NFAConfig {
     alphabet,
     startStateId: fragment.start.id,
     acceptStateIds: [fragment.accept.id],
-    states: layoutStates,
+    states: positioned,
     transitions: fragment.transitions,
   };
 }

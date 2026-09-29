@@ -67,7 +67,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({ automaton, onImage }) =>
         style={{ padding: '6px 10px', fontSize: '12px', gap: '4px' }}
       >
         <Download size={15} />
-        <span>Export</span>
+        <span className="canvas-toolbar-label">Export</span>
         <ChevronDown size={13} />
       </button>
       {open && (

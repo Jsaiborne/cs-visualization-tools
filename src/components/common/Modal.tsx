@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -8,7 +9,10 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-/** Centered glass dialog over a dimmed backdrop. Closes on Escape or a backdrop click. */
+/**
+ * Centered glass dialog over a dimmed backdrop. Closes on Escape or a backdrop click.
+ * Rendered into document.body so ancestors' stacking contexts (z-index) can't trap it.
+ */
 export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, children }) => {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -21,7 +25,7 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, child
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -72,7 +76,8 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, child
         </div>
         <div style={{ padding: '16px 18px', overflowY: 'auto' }}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

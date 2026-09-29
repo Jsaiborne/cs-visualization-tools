@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Network, Cpu, Binary } from 'lucide-react';
+import { Network, Cpu } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore, defaultDFA, defaultTM } from '../../store/useAutomataStore';
@@ -11,6 +11,8 @@ const CompilerEditor = lazy(() => import('./CompilerEditor'));
 const TuringMachineView = lazy(() => import('./TuringMachineView'));
 const RegexPanel = lazy(() => import('./RegexPanel'));
 const CFGViewer = lazy(() => import('./CFGViewer'));
+const ToolkitActions = lazy(() => import('./ToolkitActions'));
+const ConstructionPanel = lazy(() => import('./ConstructionPanel'));
 
 const ModuleLoading: React.FC = () => (
   <div
@@ -119,11 +121,7 @@ export const CanvasViewport: React.FC = () => {
               </button>
             </div>
 
-            {activeModule === 'REGEX' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--accent-purple)' }}>
-                <Binary size={14} /> Regex & Thompson Construction Enabled
-              </div>
-            )}
+            {automaton.type !== 'TM' && <ToolkitActions />}
           </div>
 
           {/* Regex Compiler Input Panel */}
@@ -131,7 +129,16 @@ export const CanvasViewport: React.FC = () => {
 
           {/* Active Machine Viewport */}
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-            {automaton.type === 'TM' ? <TuringMachineView /> : <DFACanvas />}
+            {automaton.type === 'TM' ? (
+              <TuringMachineView />
+            ) : (
+              <div style={{ display: 'flex', height: '100%' }}>
+                <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                  <DFACanvas />
+                </div>
+                <ConstructionPanel />
+              </div>
+            )}
           </div>
         </div>
       ) : activeModule === 'GRAMMAR' ? (

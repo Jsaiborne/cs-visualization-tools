@@ -128,6 +128,14 @@ html, body, #root {
 }
 
 /* Mobile Responsiveness Rules (max-width: 768px) */
+/* The canvas toolbar drops its text labels (icons + tooltips remain) when the canvas is narrow,
+   e.g. with a construction panel open beside it */
+@container (max-width: 900px) {
+  .canvas-toolbar-label {
+    display: none;
+  }
+}
+
 /* Secondary header text gives way to the module tabs on narrower screens */
 @media (max-width: 1440px) {
   .header-wide-only {

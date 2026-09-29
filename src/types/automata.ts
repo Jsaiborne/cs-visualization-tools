@@ -40,6 +40,7 @@ export interface DFAConfig {
   transitionTable?: DFATransitionTable;
   startStateId: string;
   acceptStateIds: string[];
+  regex?: string; // Source expression when derived from a regex NFA (subset construction, minimization)
 }
 
 export interface NFAConfig {

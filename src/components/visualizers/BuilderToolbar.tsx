@@ -115,7 +115,7 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         style={{ padding: '6px 10px', fontSize: '12px' }}
       >
         <PlusCircle size={15} color="var(--accent-emerald)" />
-        <span>+ State</span>
+        <span className="canvas-toolbar-label">+ State</span>
       </button>
 
       <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)', margin: '0 4px' }} />
@@ -134,7 +134,7 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         }}
       >
         <PlayCircle size={15} color="var(--accent-blue)" />
-        <span>Make Start</span>
+        <span className="canvas-toolbar-label">Make Start</span>
       </button>
 
       {/* Toggle Accept State Button */}
@@ -151,7 +151,7 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         }}
       >
         <CheckCircle2 size={15} color="var(--accent-purple)" />
-        <span>Toggle Accept</span>
+        <span className="canvas-toolbar-label">Toggle Accept</span>
       </button>
 
       <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)', margin: '0 4px' }} />
@@ -172,7 +172,7 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         }}
       >
         <Trash2 size={15} />
-        <span>Delete</span>
+        <span className="canvas-toolbar-label">Delete</span>
       </button>
 
       <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)', margin: '0 4px' }} />

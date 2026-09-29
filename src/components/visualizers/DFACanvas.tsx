@@ -19,6 +19,7 @@ import {
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
+import { useToolkitStore, canvasDecorations } from '../../store/useToolkitStore';
 import type { DFAConfig, NFAConfig, ExecutionStep } from '../../types/automata';
 import { isEpsilon } from '../../core/epsilon';
 import AutomataNode from './AutomataNode';
@@ -76,12 +77,21 @@ const DFACanvasInner: React.FC = () => {
   const status = currentStep?.status ?? 'PENDING';
 
   const flow = useReactFlow();
+  // Re-fit whenever the canvas itself changes size: window resizes, and side panels opening/closing
+  const containerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const handleResize = () => {
-      window.requestAnimationFrame(() => flow.fitView({ padding: 0.3, duration: 200 }));
+    const container = containerRef.current;
+    if (!container) return;
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => flow.fitView({ padding: 0.3, duration: 200 }));
+    });
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [flow]);
 
   // Re-fit when a different machine is loaded (preset, regex, share link); edits keep the current view.
@@ -91,6 +101,10 @@ const DFACanvasInner: React.FC = () => {
   useEffect(() => {
     fitPending.current = true;
   }, [automaton.id]);
+
+  // Toolkit constructions (subset construction growing, minimization blocks) decorate the canvas
+  const construction = useToolkitStore((state) => state.construction);
+  const decorations = useMemo(() => canvasDecorations(construction, automaton.id), [construction, automaton.id]);
 
   // Transform Automaton states into React Flow Nodes
   const derivedNodes: Node[] = useMemo(() => {
@@ -112,10 +126,13 @@ const DFACanvasInner: React.FC = () => {
           isStart: st.isStart,
           isAcceptState: st.isAccept,
           isActive,
+          isFaded: decorations.fadedStates.has(st.id),
+          isHighlighted: decorations.highlighted === st.id,
+          groupColor: decorations.groupColor.get(st.id),
         },
       };
     });
-  }, [automaton.states, automaton.type, currentStateId, activeNFAStateIds]);
+  }, [automaton.states, automaton.type, currentStateId, activeNFAStateIds, decorations]);
 
   // Transform Automaton transitions into React Flow Edges
   const transitions = automaton.type === 'TM' ? null : (automaton as DFAConfig | NFAConfig).transitions;
@@ -137,6 +154,7 @@ const DFACanvasInner: React.FC = () => {
       seen.set(key, offsetIndex + 1);
       const isEpsilonEdge = isEpsilon(t.symbol);
       const isEdgeActive = activeEdgeSet.has(t.id);
+      const opacity = decorations.fadedEdgesFrom.has(t.from) || decorations.fadedStates.has(t.to) ? 0.12 : 1;
 
       return {
         id: t.id,
@@ -150,18 +168,21 @@ const DFACanvasInner: React.FC = () => {
           stroke: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#a855f7' : '#64748b'),
           strokeWidth: isEdgeActive ? 3 : 2,
           strokeDasharray: isEpsilonEdge ? '6 4' : 'none',
-          transition: 'stroke 300ms ease, stroke-width 300ms ease',
+          transition: 'stroke 300ms ease, stroke-width 300ms ease, opacity 300ms ease',
+          opacity,
         },
         labelStyle: {
           fill: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#c084fc' : '#94a3b8'),
           fontFamily: 'var(--font-mono)',
           fontWeight: 700,
           fontSize: '14px',
+          opacity,
         },
         labelBgStyle: {
           fill: 'rgba(15, 23, 42, 0.95)',
           rx: 4,
           ry: 4,
+          opacity,
         },
         labelBgPadding: [6, 4],
         markerEnd: {
@@ -172,7 +193,7 @@ const DFACanvasInner: React.FC = () => {
         },
       };
     });
-  }, [transitions, activeEdgeIds, activeTransitionId]);
+  }, [transitions, activeEdgeIds, activeTransitionId, decorations]);
 
   // React Flow is driven from local state so drags and selection render immediately;
   // the store stays the source of truth and is re-synced whenever it changes.
@@ -247,11 +268,13 @@ const DFACanvasInner: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       id="dfa-canvas-viewport"
       style={{
         width: '100%',
         height: '100%',
         position: 'relative',
+        containerType: 'inline-size',
         background: 'radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.3) 0%, rgba(9, 13, 22, 0.95) 100%)',
       }}
     >

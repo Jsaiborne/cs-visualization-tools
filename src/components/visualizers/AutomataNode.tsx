@@ -6,17 +6,35 @@ export interface AutomataNodeData {
   isStart?: boolean;
   isAcceptState?: boolean;
   isActive?: boolean;
+  /** Toolkit: not yet discovered at the current construction step */
+  isFaded?: boolean;
+  /** Toolkit: the state the current construction step is about */
+  isHighlighted?: boolean;
+  /** Toolkit: color of the partition block this state belongs to (minimization) */
+  groupColor?: string;
   [key: string]: unknown;
+}
+
+/** Long labels (subset-construction sets) shrink and wrap to stay inside the circle. */
+function labelFontSize(label: string): number {
+  if (label.length <= 3) return 15;
+  if (label.length <= 6) return 13;
+  if (label.length <= 12) return 11;
+  return 9;
 }
 
 export const AutomataNode: React.FC<NodeProps> = ({ data }) => {
   const nodeData = data as AutomataNodeData;
-  const { label, isStart, isAcceptState, isActive } = nodeData;
+  const { label, isStart, isAcceptState, isActive, isFaded, isHighlighted, groupColor } = nodeData;
 
   return (
     <div
+      title={label}
       style={{
         position: 'relative',
+        opacity: isFaded ? 0.18 : 1,
+        outline: isHighlighted ? '3px dashed var(--accent-amber)' : 'none',
+        outlineOffset: '5px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -28,6 +46,8 @@ export const AutomataNode: React.FC<NodeProps> = ({ data }) => {
           : 'var(--bg-card)',
         border: isActive
           ? '2px solid var(--accent-blue)'
+          : groupColor
+          ? `3px solid ${groupColor}`
           : '2px solid var(--border-subtle)',
         boxShadow: isActive
           ? '0 0 24px rgba(56, 189, 248, 0.6), 0 0 48px rgba(168, 85, 247, 0.35)'
@@ -81,10 +101,16 @@ export const AutomataNode: React.FC<NodeProps> = ({ data }) => {
       <span
         style={{
           fontFamily: 'var(--font-mono)',
-          fontSize: '15px',
+          fontSize: `${labelFontSize(label)}px`,
           fontWeight: 700,
           color: isActive ? '#ffffff' : 'var(--text-primary)',
           zIndex: 2,
+          maxWidth: '62px',
+          maxHeight: '58px',
+          overflow: 'hidden',
+          textAlign: 'center',
+          lineHeight: 1.1,
+          overflowWrap: 'anywhere',
           textShadow: isActive ? '0 0 8px rgba(56, 189, 248, 0.8)' : 'none',
         }}
       >

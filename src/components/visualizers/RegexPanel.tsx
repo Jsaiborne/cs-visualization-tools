@@ -22,7 +22,7 @@ export const RegexPanel: React.FC = () => {
     useShallow((state) => ({
       setAutomaton: state.setAutomaton,
       setTestInput: state.setTestInput,
-      loadedRegex: state.automaton.type === 'NFA' ? state.automaton.regex : undefined,
+      loadedRegex: state.automaton.type !== 'TM' ? state.automaton.regex : undefined,
       testInput: state.testInput,
     }))
   );
