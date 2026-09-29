@@ -47,6 +47,7 @@ export const TuringMachineView: React.FC = () => {
         height: '100%',
         padding: '20px',
         gap: '20px',
+        // Sections keep their natural height (flexShrink: 0); the view scrolls instead of squeezing them
         overflowY: 'auto',
         background: 'var(--bg-dark)',
       }}
@@ -55,6 +56,7 @@ export const TuringMachineView: React.FC = () => {
       <div
         className="glass-panel"
         style={{
+          flexShrink: 0,
           padding: '14px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -151,6 +153,7 @@ export const TuringMachineView: React.FC = () => {
       {currentStep && (
         <div
           style={{
+            flexShrink: 0,
             padding: '12px 16px',
             borderRadius: '8px',
             background: 'rgba(15, 23, 42, 0.7)',

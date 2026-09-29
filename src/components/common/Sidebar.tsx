@@ -3,6 +3,7 @@ import { Play, Layers, Sliders, CheckCircle2, XCircle, ArrowRight, Clock, AlertT
 import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
+import type { ExecutionStep } from '../../types/automata';
 
 export const Sidebar: React.FC = () => {
   const activeModule = useUIStore((state) => state.activeModule);
@@ -28,7 +29,7 @@ export const Sidebar: React.FC = () => {
     }))
   );
 
-  const currentStep = executionSteps[currentStepIndex] || {
+  const currentStep: ExecutionStep = executionSteps[currentStepIndex] || {
     stepIndex: 0,
     currentStateId: automaton.startStateId || 'None',
     currentSymbol: null,
@@ -39,6 +40,25 @@ export const Sidebar: React.FC = () => {
   };
 
   const hasValidationErrors = validationErrors.length > 0;
+
+  // DFA/NFA steps split the input around the symbol being read. A Turing machine doesn't consume
+  // input, so show its tape split around the head instead.
+  const tape = currentStep.tapeState;
+  const head = currentStep.tapeHeadIndex;
+  const tapeSplit =
+    tape && head !== undefined
+      ? {
+          label: 'Tape (around head)',
+          before: tape.slice(0, head).join(''),
+          current: tape[head] ?? '',
+          after: tape.slice(head + 1).join(''),
+        }
+      : {
+          label: 'Input Tape Breakdown',
+          before: currentStep.consumedInput,
+          current: currentStep.currentSymbol ?? '',
+          after: currentStep.remainingInput,
+        };
 
   return (
     <aside
@@ -58,7 +78,7 @@ export const Sidebar: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Sliders size={18} color="var(--accent-blue)" />
           <h2 style={{ fontSize: '14px', fontWeight: 600, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {activeModule} Configuration
+            {activeModule === 'REGEX' ? 'Regex' : 'Automata'} Configuration
           </h2>
         </div>
         <span
@@ -115,7 +135,7 @@ export const Sidebar: React.FC = () => {
               color: hasValidationErrors ? 'var(--accent-amber)' : 'var(--accent-emerald)'
             }}
           >
-            {hasValidationErrors ? `${validationErrors.length} Warning(s)` : 'DFA Ready'}
+            {hasValidationErrors ? `${validationErrors.length} Warning(s)` : `${automaton.type} Ready`}
           </span>
         </div>
 
@@ -220,16 +240,16 @@ export const Sidebar: React.FC = () => {
 
         {/* Input Tape Visualization */}
         <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>Input Tape Breakdown</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>{tapeSplit.label}</span>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>{currentStep.consumedInput}</span>
-            {currentStep.currentSymbol && (
+            <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>{tapeSplit.before}</span>
+            {tapeSplit.current && (
               <span style={{ background: 'var(--accent-purple)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontWeight: 700 }}>
-                {currentStep.currentSymbol}
+                {tapeSplit.current}
               </span>
             )}
             <span style={{ color: 'var(--text-secondary)' }}>
-              {currentStep.remainingInput}
+              {tapeSplit.after}
             </span>
           </div>
         </div>

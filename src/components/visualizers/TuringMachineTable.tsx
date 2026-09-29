@@ -63,6 +63,7 @@ export const TuringMachineTable: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
+        flexShrink: 0,
         background: 'rgba(15, 23, 42, 0.6)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '12px',

@@ -47,6 +47,7 @@ export const TuringMachineTape: React.FC = () => {
         flexDirection: 'column',
         alignItems: 'center',
         width: '100%',
+        flexShrink: 0,
         background: 'rgba(9, 13, 22, 0.85)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '12px',
@@ -186,10 +187,10 @@ export const TuringMachineTape: React.FC = () => {
             gap: `${CELL_GAP}px`,
             position: 'absolute',
             top: '8px',
-            left: 0,
-            transform: `translateX(calc(50% - ${
-              activeIndexInPaddedTape * STEP_SIZE + CELL_WIDTH / 2
-            }px))`,
+            // Anchor the strip's left edge at the window's center, then pull the head cell's center
+            // onto it. (A % inside translateX is relative to the strip's own width, not the window.)
+            left: '50%',
+            transform: `translateX(-${activeIndexInPaddedTape * STEP_SIZE + CELL_WIDTH / 2}px)`,
             transition: 'transform 350ms cubic-bezier(0.4, 0, 0.2, 1)',
             willChange: 'transform',
           }}
