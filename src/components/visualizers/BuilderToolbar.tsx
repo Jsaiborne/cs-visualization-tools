@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlusCircle, PlayCircle, CheckCircle2, Trash2 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
 
 interface BuilderToolbarProps {
@@ -11,7 +12,19 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
   selectedNodeId,
   selectedEdgeId,
 }) => {
-  const { addState, setStartState, toggleAcceptState, removeElement } = useAutomataStore();
+  const {
+    addState,
+    setStartState,
+    toggleAcceptState,
+    removeElement,
+  } = useAutomataStore(
+    useShallow((state) => ({
+      addState: state.addState,
+      setStartState: state.setStartState,
+      toggleAcceptState: state.toggleAcceptState,
+      removeElement: state.removeElement,
+    }))
+  );
 
   const handleAddState = () => {
     // Generate position with slight offset

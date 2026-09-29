@@ -1,4 +1,5 @@
 import { EPSILON, END_MARKER } from '../../types/cfg';
+import { isEpsilon } from '../epsilon';
 import type { Grammar, ProductionRule } from '../../types/cfg';
 
 /**
@@ -45,8 +46,7 @@ export function parseGrammarText(rawText: string): Grammar {
 
   // Helper to normalize individual RHS symbols
   const normalizeSymbol = (sym: string): string => {
-    const lower = sym.toLowerCase();
-    if (sym === '' || sym === 'ε' || lower === 'epsilon' || lower === 'eps' || lower === 'e') {
+    if (sym === '' || isEpsilon(sym)) {
       return EPSILON;
     }
     return sym;

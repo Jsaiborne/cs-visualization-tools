@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
 import { Binary, Sparkles, AlertCircle } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import { compileRegexToNFA } from '../../core/automata/regexCompiler';
 
 export const RegexPanel: React.FC = () => {
-  const { setAutomaton, setTestInput } = useAutomataStore();
+  const {
+    setAutomaton,
+    setTestInput,
+  } = useAutomataStore(
+    useShallow((state) => ({
+      setAutomaton: state.setAutomaton,
+      setTestInput: state.setTestInput,
+    }))
+  );
 
   const [regexInput, setRegexInput] = useState<string>('(0|1)*11');
   const [sampleString, setSampleString] = useState<string>('01011');
@@ -72,7 +81,7 @@ export const RegexPanel: React.FC = () => {
               Thompson's Regex-to-NFA Compiler
             </h3>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-              Supports union (|), Kleene star (*), concatenation, and parentheses grouping ()
+              Supports union (|), Kleene star (*), one-or-more (+), optional (?), concatenation, and parentheses grouping ()
             </span>
           </div>
         </div>

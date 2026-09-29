@@ -1,19 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { Code2, Sparkles, Layers, Network, Cpu, Database } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import { TokenStream } from './TokenStream';
 import { ASTViewer } from './ASTViewer';
 import { TACViewer } from './TACViewer';
 import SymbolTableViewer from './SymbolTableViewer';
 
+type CodeEditor = Parameters<OnMount>[0];
+type MonacoApi = Parameters<OnMount>[1];
+type DecorationsCollection = ReturnType<CodeEditor['createDecorationsCollection']>;
+
 export const CompilerEditor: React.FC = () => {
-  const { sourceCode, setSourceCode, selectedRange } = useCompilerStore();
+  const { sourceCode, setSourceCode, selectedRange } = useCompilerStore(
+    useShallow((state) => ({
+      sourceCode: state.sourceCode,
+      setSourceCode: state.setSourceCode,
+      selectedRange: state.selectedRange,
+    }))
+  );
   const [rightPaneTab, setRightPaneTab] = useState<'TOKENS' | 'AST' | 'TAC' | 'SYMBOL_TABLE'>('AST');
 
-  const editorRef = useRef<any>(null);
-  const monacoRef = useRef<any>(null);
-  const decorationsRef = useRef<string[]>([]);
+  const editorRef = useRef<CodeEditor | null>(null);
+  const monacoRef = useRef<MonacoApi | null>(null);
+  const decorationsRef = useRef<DecorationsCollection | null>(null);
 
   const presets = [
     { label: 'Basic Math', code: '(5 + 32) * 4' },
@@ -25,18 +36,20 @@ export const CompilerEditor: React.FC = () => {
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+    decorationsRef.current = editor.createDecorationsCollection();
   };
 
   // Cross-component Monaco Editor decoration highlighting for hovered AST nodes & TAC instructions
   useEffect(() => {
-    if (!editorRef.current || !monacoRef.current) return;
+    if (!editorRef.current || !monacoRef.current || !decorationsRef.current) return;
     const editor = editorRef.current;
     const monaco = monacoRef.current;
+    const decorations = decorationsRef.current;
     const model = editor.getModel();
     if (!model) return;
 
     if (!selectedRange || selectedRange.start >= selectedRange.end) {
-      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+      decorations.clear();
       return;
     }
 
@@ -51,7 +64,7 @@ export const CompilerEditor: React.FC = () => {
         endPos.column
       );
 
-      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
+      decorations.set([
         {
           range: range,
           options: {
@@ -61,7 +74,7 @@ export const CompilerEditor: React.FC = () => {
         },
       ]);
     } catch {
-      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+      decorations.clear();
     }
   }, [selectedRange]);
 

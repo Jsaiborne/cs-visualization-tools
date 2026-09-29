@@ -11,6 +11,7 @@ import {
   calculateFollowSets,
 } from '../core/compiler/cfgEngine';
 import { generateLL1Table, simulateLL1 } from '../core/compiler/ll1Parser';
+import { createPlaybackSlice, type PlaybackState } from './playback';
 
 export interface GrammarPreset {
   id: string;
@@ -46,7 +47,7 @@ B -> b`,
   },
 ];
 
-interface GrammarState {
+interface GrammarState extends PlaybackState {
   grammarText: string;
   testInput: string;
   grammar: Grammar;
@@ -54,18 +55,10 @@ interface GrammarState {
   followSets: Record<string, string[]>;
   ll1Table: LL1Table;
   executionSteps: LL1ExecutionStep[];
-  currentStepIndex: number;
-  isPlaying: boolean;
-  playbackSpeedMs: number;
   parseError: string | null;
 
   setGrammarText: (text: string) => void;
   setTestInput: (input: string) => void;
-  stepForward: () => void;
-  stepBackward: () => void;
-  reset: () => void;
-  setIsPlaying: (isPlaying: boolean) => void;
-  setPlaybackSpeedMs: (speed: number) => void;
   loadPreset: (presetId: string) => void;
   recompute: () => void;
 }
@@ -113,9 +106,8 @@ function computeGrammarState(grammarText: string, testInput: string) {
 const initialComputed = computeGrammarState(defaultPreset.grammarText, defaultPreset.testInput);
 
 export const useGrammarStore = create<GrammarState>((set, get) => ({
+  ...createPlaybackSlice<GrammarState>(set, (state) => state.executionSteps.length),
   ...initialComputed,
-  isPlaying: false,
-  playbackSpeedMs: 800,
 
   setGrammarText: (text: string) => {
     set(
@@ -144,36 +136,6 @@ export const useGrammarStore = create<GrammarState>((set, get) => ({
         draft.isPlaying = false;
       })
     );
-  },
-
-  stepForward: () => {
-    set((state) => {
-      if (state.executionSteps.length > 0 && state.currentStepIndex < state.executionSteps.length - 1) {
-        return { currentStepIndex: state.currentStepIndex + 1 };
-      }
-      return { isPlaying: false };
-    });
-  },
-
-  stepBackward: () => {
-    set((state) => {
-      if (state.executionSteps.length > 0 && state.currentStepIndex > 0) {
-        return { currentStepIndex: state.currentStepIndex - 1 };
-      }
-      return {};
-    });
-  },
-
-  reset: () => {
-    set({ currentStepIndex: 0, isPlaying: false });
-  },
-
-  setIsPlaying: (isPlaying: boolean) => {
-    set({ isPlaying });
-  },
-
-  setPlaybackSpeedMs: (playbackSpeedMs: number) => {
-    set({ playbackSpeedMs });
   },
 
   loadPreset: (presetId: string) => {

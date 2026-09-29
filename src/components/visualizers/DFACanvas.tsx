@@ -8,21 +8,32 @@ import {
   MarkerType,
   ReactFlowProvider,
   useReactFlow,
+  applyNodeChanges,
+  applyEdgeChanges,
   type Node,
   type Edge,
   type OnNodesChange,
   type OnEdgesChange,
   type Connection,
-  type OnSelectionChangeParams,
 } from '@xyflow/react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
-import type { DFAConfig, NFAConfig } from '../../types/automata';
+import type { DFAConfig, NFAConfig, ExecutionStep } from '../../types/automata';
+import { isEpsilon } from '../../core/epsilon';
 import AutomataNode from './AutomataNode';
 import { BuilderToolbar } from './BuilderToolbar';
 
 const nodeTypes = {
   automataNode: AutomataNode,
 };
+
+const NO_IDS: string[] = [];
+
+/** Keeps React Flow's per-element `selected` flag when elements are re-derived from the store. */
+function preserveSelection<T extends Node | Edge>(prev: T[], next: T[]): T[] {
+  const selected = new Set(prev.filter((el) => el.selected).map((el) => el.id));
+  return selected.size === 0 ? next : next.map((el) => (selected.has(el.id) ? { ...el, selected: true } : el));
+}
 
 const DFACanvasInner: React.FC = () => {
   const {
@@ -32,28 +43,29 @@ const DFACanvasInner: React.FC = () => {
     addEdge,
     removeElement,
     updateNodePosition,
-  } = useAutomataStore();
+  } = useAutomataStore(
+    useShallow((state) => ({
+      automaton: state.automaton,
+      executionSteps: state.executionSteps,
+      currentStepIndex: state.currentStepIndex,
+      addEdge: state.addEdge,
+      removeElement: state.removeElement,
+      updateNodePosition: state.updateNodePosition,
+    }))
+  );
 
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
 
   // Edge Label Prompt Modal State
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [transitionSymbol, setTransitionSymbol] = useState<string>('0');
 
-  const currentStep = executionSteps[currentStepIndex] || ({
-    currentStateId: automaton.startStateId,
-    activeTransitionId: undefined,
-    status: 'PENDING',
-  } as any);
+  const currentStep: ExecutionStep | undefined = executionSteps[currentStepIndex];
 
-  const activeNFAStateIds = currentStep.currentNFAStateIds || [];
-  const activeEdgeIds = currentStep.activeTransitionIds || (currentStep.activeTransitionId ? [currentStep.activeTransitionId] : []);
-
-  const activeNFAStateKey = activeNFAStateIds.join(',');
-  const activeEdgeKey = activeEdgeIds.join(',');
-  const currentStateId = currentStep.currentStateId;
-  const activeTransitionId = currentStep.activeTransitionId;
+  const activeNFAStateIds = currentStep?.currentNFAStateIds ?? NO_IDS;
+  const activeEdgeIds = currentStep?.activeTransitionIds ?? NO_IDS;
+  const currentStateId = currentStep?.currentStateId ?? automaton.startStateId;
+  const activeTransitionId = currentStep?.activeTransitionId;
+  const status = currentStep?.status ?? 'PENDING';
 
   const flow = useReactFlow();
   useEffect(() => {
@@ -65,7 +77,7 @@ const DFACanvasInner: React.FC = () => {
   }, [flow]);
 
   // Transform Automaton states into React Flow Nodes
-  const nodes: Node[] = useMemo(() => {
+  const derivedNodes: Node[] = useMemo(() => {
     const activeSet = new Set(activeNFAStateIds);
     return automaton.states.map((st, idx) => {
       const isActive = automaton.type === 'NFA'
@@ -87,18 +99,18 @@ const DFACanvasInner: React.FC = () => {
         },
       };
     });
-  }, [automaton.states, automaton.type, currentStateId, activeNFAStateKey]);
+  }, [automaton.states, automaton.type, currentStateId, activeNFAStateIds]);
 
   // Transform Automaton transitions into React Flow Edges
-  const edges: Edge[] = useMemo(() => {
-    if (automaton.type === 'TM') return [];
-    const dfaOrNfa = automaton as DFAConfig | NFAConfig;
+  const transitions = automaton.type === 'TM' ? null : (automaton as DFAConfig | NFAConfig).transitions;
+  const derivedEdges: Edge[] = useMemo(() => {
+    if (!transitions) return [];
     const activeEdgeSet = new Set(activeEdgeIds);
     if (activeTransitionId) activeEdgeSet.add(activeTransitionId);
 
-    return dfaOrNfa.transitions.map((t) => {
+    return transitions.map((t) => {
       const isSelfLoop = t.from === t.to;
-      const isEpsilon = ['ε', 'e', 'eps'].includes(t.symbol);
+      const isEpsilonEdge = isEpsilon(t.symbol);
       const isEdgeActive = activeEdgeSet.has(t.id);
 
       return {
@@ -109,13 +121,13 @@ const DFACanvasInner: React.FC = () => {
         animated: isEdgeActive,
         type: isSelfLoop ? 'smoothstep' : 'default',
         style: {
-          stroke: isEdgeActive ? (isEpsilon ? '#c084fc' : '#38bdf8') : (isEpsilon ? '#a855f7' : '#64748b'),
+          stroke: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#a855f7' : '#64748b'),
           strokeWidth: isEdgeActive ? 3 : 2,
-          strokeDasharray: isEpsilon ? '6 4' : 'none',
+          strokeDasharray: isEpsilonEdge ? '6 4' : 'none',
           transition: 'stroke 300ms ease, stroke-width 300ms ease',
         },
         labelStyle: {
-          fill: isEdgeActive ? (isEpsilon ? '#c084fc' : '#38bdf8') : (isEpsilon ? '#c084fc' : '#94a3b8'),
+          fill: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#c084fc' : '#94a3b8'),
           fontFamily: 'var(--font-mono)',
           fontWeight: 700,
           fontSize: '14px',
@@ -128,17 +140,29 @@ const DFACanvasInner: React.FC = () => {
         labelBgPadding: [6, 4],
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isEdgeActive ? (isEpsilon ? '#c084fc' : '#38bdf8') : (isEpsilon ? '#a855f7' : '#64748b'),
+          color: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#a855f7' : '#64748b'),
           width: 18,
           height: 18,
         },
       };
     });
-  }, [automaton.transitions, automaton.type, activeEdgeKey, activeTransitionId]);
+  }, [transitions, activeEdgeIds, activeTransitionId]);
+
+  // React Flow is driven from local state so drags and selection render immediately;
+  // the store stays the source of truth and is re-synced whenever it changes.
+  const [nodes, setNodes] = useState<Node[]>(derivedNodes);
+  const [edges, setEdges] = useState<Edge[]>(derivedEdges);
+  useEffect(() => setNodes((prev) => preserveSelection(prev, derivedNodes)), [derivedNodes]);
+  useEffect(() => setEdges((prev) => preserveSelection(prev, derivedEdges)), [derivedEdges]);
+
+  const selectedNodeId = nodes.find((n) => n.selected)?.id ?? null;
+  const selectedEdgeId = selectedNodeId ? null : (edges.find((e) => e.selected)?.id ?? null);
 
   // Node changes handler (deleting, selecting)
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
+      const local = changes.filter((change) => change.type !== 'remove');
+      if (local.length > 0) setNodes((nds) => applyNodeChanges(local, nds));
       changes.forEach((change) => {
         if (change.type === 'remove') {
           removeElement(change.id);
@@ -151,6 +175,8 @@ const DFACanvasInner: React.FC = () => {
   // Edge changes handler (deleting, selecting)
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
+      const local = changes.filter((change) => change.type !== 'remove');
+      if (local.length > 0) setEdges((eds) => applyEdgeChanges(local, eds));
       changes.forEach((change) => {
         if (change.type === 'remove') {
           removeElement(change.id);
@@ -186,13 +212,6 @@ const DFACanvasInner: React.FC = () => {
     }
   };
 
-  // Handle selection changes
-  const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
-    const selectedNode = params.nodes[0];
-    const selectedEdge = params.edges[0];
-    setSelectedNodeId(selectedNode ? selectedNode.id : null);
-    setSelectedEdgeId(selectedEdge ? selectedEdge.id : null);
-  }, []);
 
   return (
     <div
@@ -212,7 +231,6 @@ const DFACanvasInner: React.FC = () => {
         onEdgesChange={onEdgesChange}
         onNodeDragStop={onNodeDragStop}
         onConnect={onConnect}
-        onSelectionChange={onSelectionChange}
         fitView
         fitViewOptions={{ padding: 0.3 }}
         proOptions={{ hideAttribution: true }}
@@ -280,7 +298,7 @@ const DFACanvasInner: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                Symbol (e.g. 0, 1, a, b, ε)
+                Symbol(s), comma-separated (e.g. 0, 1, a, ε)
               </label>
               <input
                 type="text"
@@ -343,16 +361,16 @@ const DFACanvasInner: React.FC = () => {
             height: '10px',
             borderRadius: '50%',
             background:
-              currentStep.status === 'ACCEPTED'
+              status === 'ACCEPTED'
                 ? 'var(--accent-emerald)'
-                : currentStep.status === 'REJECTED'
+                : status === 'REJECTED'
                 ? 'var(--accent-rose)'
                 : 'var(--accent-blue)',
             boxShadow: '0 0 10px currentColor',
           }}
         />
         <span style={{ fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-sans)' }}>
-          State: <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{currentStep.currentStateId}</code>
+          State: <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{currentStateId}</code>
         </span>
       </div>
     </div>

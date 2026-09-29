@@ -1,10 +1,23 @@
 import React from 'react';
 import { Cpu, AlertTriangle, Code2, ArrowRight } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import type { TACInstruction } from '../../types/compiler';
 
 export const TACViewer: React.FC = () => {
-  const { tacInstructions, parseError, selectedRange, setSelectedRange } = useCompilerStore();
+  const {
+    tacInstructions,
+    parseError,
+    selectedRange,
+    setSelectedRange,
+  } = useCompilerStore(
+    useShallow((state) => ({
+      tacInstructions: state.tacInstructions,
+      parseError: state.parseError,
+      selectedRange: state.selectedRange,
+      setSelectedRange: state.setSelectedRange,
+    }))
+  );
 
   return (
     <div
@@ -191,8 +204,8 @@ export const TACViewer: React.FC = () => {
 
                         <span style={{ color: 'var(--text-muted)' }}>=</span>
 
-                        {/* Operand 1 */}
-                        <span style={{ color: '#38bdf8' }}>{instr.arg1}</span>
+                        {/* Operand 1 (binary form: arg1 op arg2) */}
+                        {instr.arg2 !== null && <span style={{ color: '#38bdf8' }}>{instr.arg1}</span>}
 
                         {/* Operator */}
                         <span
@@ -205,8 +218,8 @@ export const TACViewer: React.FC = () => {
                           {instr.op}
                         </span>
 
-                        {/* Operand 2 */}
-                        <span style={{ color: '#38bdf8' }}>{instr.arg2}</span>
+                        {/* Operand 2, or the sole operand of a unary op */}
+                        <span style={{ color: '#38bdf8' }}>{instr.arg2 ?? instr.arg1}</span>
                       </div>
                     </div>
 

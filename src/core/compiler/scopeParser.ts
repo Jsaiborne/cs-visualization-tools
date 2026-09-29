@@ -11,17 +11,22 @@ export interface BaseScopeASTNode {
   end: number;
 }
 
+/** Whether a right-hand-side operand is a numeric literal or a reference to another variable. */
+export type ScopeValueKind = 'number' | 'identifier';
+
 export interface VariableDeclarationNode extends BaseScopeASTNode {
   type: 'VariableDeclaration';
   name: string;
   varType: string;
   initValue: string;
+  initKind: ScopeValueKind;
 }
 
 export interface AssignmentExpressionNode extends BaseScopeASTNode {
   type: 'AssignmentExpression';
   name: string;
   value: string;
+  valueKind: ScopeValueKind;
 }
 
 export interface BlockStatementNode extends BaseScopeASTNode {
@@ -108,9 +113,17 @@ export function tokenizeScopeLanguage(input: string): ScopeToken[] {
     // Numbers
     if (/[0-9]/.test(char)) {
       let numStr = '';
-      while (index < input.length && /[0-9\.]/.test(input[index])) {
+      while (index < input.length && /[0-9]/.test(input[index])) {
         numStr += input[index];
         index++;
+      }
+      if (input[index] === '.' && /[0-9]/.test(input[index + 1] ?? '')) {
+        numStr += input[index];
+        index++;
+        while (index < input.length && /[0-9]/.test(input[index])) {
+          numStr += input[index];
+          index++;
+        }
       }
       tokens.push({ type: 'NUMBER', value: numStr, line, start, end: index });
       continue;
@@ -163,6 +176,14 @@ export function parseScopeLanguage(input: string): ProgramScopeNode {
     return token;
   }
 
+  function expectSemicolon(line: number): number {
+    const token = peek();
+    if (token?.type !== 'SEMICOLON') {
+      throw new Error(`Line ${token?.line ?? line}: Expected ';' but found ${token ? `'${token.value}'` : 'end of input'}`);
+    }
+    return consume('SEMICOLON').end;
+  }
+
   function parseStatement(): ScopeASTNode {
     const token = peek();
     if (!token) {
@@ -192,29 +213,28 @@ export function parseScopeLanguage(input: string): ProgramScopeNode {
       const letToken = consume('KEYWORD');
       const identToken = consume('IDENTIFIER');
       let initValue = '0';
+      let initKind: ScopeValueKind = 'number';
 
       if (peek()?.type === 'ASSIGN') {
         consume('ASSIGN');
         const valToken = peek();
         if (valToken?.type === 'NUMBER' || valToken?.type === 'IDENTIFIER') {
           initValue = valToken.value;
+          initKind = valToken.type === 'NUMBER' ? 'number' : 'identifier';
           current++;
         } else {
           throw new Error(`Line ${identToken.line}: Expected number or identifier after '='`);
         }
       }
 
-      let endOffset = identToken.end;
-      if (peek()?.type === 'SEMICOLON') {
-        const semi = consume('SEMICOLON');
-        endOffset = semi.end;
-      }
+      const endOffset = expectSemicolon(identToken.line);
 
       return {
         type: 'VariableDeclaration',
         name: identToken.value,
         varType: 'number',
         initValue,
+        initKind,
         line: letToken.line,
         start: letToken.start,
         end: endOffset,
@@ -228,23 +248,22 @@ export function parseScopeLanguage(input: string): ProgramScopeNode {
         consume('ASSIGN');
         const valToken = peek();
         let value = '0';
+        let valueKind: ScopeValueKind = 'number';
         if (valToken?.type === 'NUMBER' || valToken?.type === 'IDENTIFIER') {
           value = valToken.value;
+          valueKind = valToken.type === 'NUMBER' ? 'number' : 'identifier';
           current++;
         } else {
           throw new Error(`Line ${identToken.line}: Expected expression after '='`);
         }
 
-        let endOffset = valToken ? valToken.end : identToken.end;
-        if (peek()?.type === 'SEMICOLON') {
-          const semi = consume('SEMICOLON');
-          endOffset = semi.end;
-        }
+        const endOffset = expectSemicolon(identToken.line);
 
         return {
           type: 'AssignmentExpression',
           name: identToken.value,
           value,
+          valueKind,
           line: identToken.line,
           start: identToken.start,
           end: endOffset,

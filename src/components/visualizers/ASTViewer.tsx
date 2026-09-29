@@ -1,13 +1,27 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { AlertTriangle, Network, Maximize2 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import type { ASTNode } from '../../types/compiler';
 
 export const ASTViewer: React.FC = () => {
-  const { ast, parseError, selectedRange, setSelectedRange } = useCompilerStore();
+  const {
+    ast,
+    parseError,
+    selectedRange,
+    setSelectedRange,
+  } = useCompilerStore(
+    useShallow((state) => ({
+      ast: state.ast,
+      parseError: state.parseError,
+      selectedRange: state.selectedRange,
+      setSelectedRange: state.setSelectedRange,
+    }))
+  );
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   useEffect(() => {
     if (!ast || !svgRef.current || !containerRef.current) return;
@@ -31,6 +45,7 @@ export const ASTViewer: React.FC = () => {
       });
 
     svg.call(zoom as any);
+    zoomRef.current = zoom;
 
     // Children extractor function for ASTNode hierarchy
     const getChildren = (node: ASTNode): ASTNode[] => {
@@ -39,6 +54,9 @@ export const ASTViewer: React.FC = () => {
       }
       if (node.type === 'BinaryExpression') {
         return [node.left, node.right];
+      }
+      if (node.type === 'UnaryExpression') {
+        return [node.argument];
       }
       return [];
     };
@@ -112,6 +130,7 @@ export const ASTViewer: React.FC = () => {
         case 'Program':
           return { bg: '#a855f7', stroke: '#c084fc', text: '#ffffff' };
         case 'BinaryExpression':
+        case 'UnaryExpression':
           return { bg: '#0284c7', stroke: '#38bdf8', text: '#ffffff' };
         case 'NumericLiteral':
           return { bg: '#059669', stroke: '#34d399', text: '#ffffff' };
@@ -127,23 +146,17 @@ export const ASTViewer: React.FC = () => {
       const el = d3.select(this);
       const theme = getNodeTheme(d.data.type);
 
-      const isHovered =
-        selectedRange &&
-        selectedRange.start === d.data.start &&
-        selectedRange.end === d.data.end;
-
-      // Card Background Box
+      // Card Background Box (hover styling is applied by the highlight effect below)
       el.append('rect')
+        .attr('class', 'ast-card')
+        .attr('data-stroke', theme.stroke)
         .attr('x', -55)
         .attr('y', -24)
         .attr('width', 110)
         .attr('height', 48)
         .attr('rx', 10)
         .attr('ry', 10)
-        .attr('fill', 'rgba(15, 23, 42, 0.95)')
-        .attr('stroke', isHovered ? '#38bdf8' : theme.stroke)
-        .attr('stroke-width', isHovered ? 3 : 1.5)
-        .attr('filter', isHovered ? 'drop-shadow(0 0 10px #38bdf8)' : 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))');
+        .attr('fill', 'rgba(15, 23, 42, 0.95)');
 
       // Header Pill Badge
       el.append('rect')
@@ -169,7 +182,7 @@ export const ASTViewer: React.FC = () => {
 
       // Node Detail Value / Operator
       let labelText = '';
-      if (d.data.type === 'BinaryExpression') {
+      if (d.data.type === 'BinaryExpression' || d.data.type === 'UnaryExpression') {
         labelText = `Op: "${d.data.operator}"`;
       } else if (d.data.type === 'NumericLiteral') {
         labelText = `Val: ${d.data.value}`;
@@ -203,14 +216,30 @@ export const ASTViewer: React.FC = () => {
     return () => {
       resizeObserver.disconnect();
     };
-  }, [ast, selectedRange, setSelectedRange]);
+  }, [ast, setSelectedRange]);
+
+  // Highlight the card whose source range matches the hovered AST node / TAC line,
+  // without rebuilding the tree (which would discard the user's zoom and pan).
+  useEffect(() => {
+    if (!svgRef.current) return;
+    d3.select(svgRef.current)
+      .selectAll<SVGRectElement, d3.HierarchyPointNode<ASTNode>>('rect.ast-card')
+      .each(function (d) {
+        const isHovered =
+          !!selectedRange && selectedRange.start === d.data.start && selectedRange.end === d.data.end;
+        d3.select(this)
+          .attr('stroke', isHovered ? '#38bdf8' : this.getAttribute('data-stroke'))
+          .attr('stroke-width', isHovered ? 3 : 1.5)
+          .attr('filter', isHovered ? 'drop-shadow(0 0 10px #38bdf8)' : 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))');
+      });
+  }, [ast, selectedRange]);
 
   const handleResetZoom = () => {
-    if (!svgRef.current || !containerRef.current) return;
+    if (!svgRef.current || !containerRef.current || !zoomRef.current) return;
     const svg = d3.select(svgRef.current);
     const width = containerRef.current.clientWidth || 600;
     svg.transition().duration(500).call(
-      (d3.zoom().transform as any),
+      zoomRef.current.transform as any,
       d3.zoomIdentity.translate(width / 2, 60).scale(0.9)
     );
   };

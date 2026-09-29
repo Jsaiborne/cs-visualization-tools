@@ -1,15 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Network, Cpu, Binary } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/useUIStore';
-import { useAutomataStore, defaultTM } from '../../store/useAutomataStore';
+import { useAutomataStore, defaultDFA, defaultTM } from '../../store/useAutomataStore';
 import DFACanvas from './DFACanvas';
 import CompilerEditor from './CompilerEditor';
 import TuringMachineView from './TuringMachineView';
 import RegexPanel from './RegexPanel';
 import CFGViewer from './CFGViewer';
 import LandingPage from '../common/LandingPage';
-import { loadStateFromURL } from '../../utils/urlState';
 
 export const CanvasViewport: React.FC = () => {
   const activeModule = useUIStore(useShallow(state => state.activeModule));
@@ -17,10 +16,6 @@ export const CanvasViewport: React.FC = () => {
     automaton: state.automaton,
     setAutomaton: state.setAutomaton
   })));
-
-  useEffect(() => {
-    loadStateFromURL();
-  }, []);
 
   const showRegexPanel = activeModule === 'REGEX' || automaton.type === 'NFA';
 
@@ -60,24 +55,7 @@ export const CanvasViewport: React.FC = () => {
               <button
                 onClick={() => {
                   if (automaton.type === 'TM') {
-                    setAutomaton({
-                      id: 'dfa-even-zeros',
-                      name: 'DFA - Binary Strings with Even Zeros',
-                      type: 'DFA',
-                      alphabet: ['0', '1'],
-                      startStateId: 'q0',
-                      acceptStateIds: ['q0'],
-                      states: [
-                        { id: 'q0', label: 'q0', isStart: true, isAccept: true, x: 150, y: 200 },
-                        { id: 'q1', label: 'q1', isStart: false, isAccept: false, x: 450, y: 200 },
-                      ],
-                      transitions: [
-                        { id: 't0', from: 'q0', to: 'q1', symbol: '0' },
-                        { id: 't1', from: 'q0', to: 'q0', symbol: '1' },
-                        { id: 't2', from: 'q1', to: 'q0', symbol: '0' },
-                        { id: 't3', from: 'q1', to: 'q1', symbol: '1' },
-                      ],
-                    });
+                    setAutomaton(defaultDFA);
                   }
                 }}
                 style={{

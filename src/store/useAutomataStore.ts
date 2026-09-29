@@ -11,6 +11,8 @@ import type {
 } from '../types/automata';
 import { simulateDFA, simulateNFA } from '../core/automata';
 import { simulateTM } from '../core/automata/turingMachine';
+import { isEpsilon } from '../core/epsilon';
+import { createPlaybackSlice, type PlaybackState } from './playback';
 
 export function validateAutomaton(automaton: AutomatonDefinition): string[] {
   const errors: string[] = [];
@@ -105,6 +107,27 @@ function computeSimulationSteps(automaton: AutomatonDefinition, input: string): 
   return [];
 }
 
+/**
+ * Re-validates the automaton and rebuilds the execution trace from scratch.
+ * Every mutation that can change the trace must call this so the step index never
+ * points past the end of a shorter trace or at steps from a stale machine.
+ */
+function recompute(draft: AutomataState) {
+  draft.validationErrors = validateAutomaton(draft.automaton);
+  draft.executionSteps =
+    draft.validationErrors.length === 0 ? computeSimulationSteps(draft.automaton, draft.testInput) : [];
+  draft.currentStepIndex = 0;
+  draft.isPlaying = false;
+}
+
+/** Smallest `qN` id not already used by a state. */
+function nextStateId(states: StateNode[]): string {
+  const used = new Set(states.map((s) => s.id));
+  let n = 0;
+  while (used.has(`q${n}`)) n++;
+  return `q${n}`;
+}
+
 export const defaultTM: TMConfig = {
   id: 'tm-bit-flipper',
   name: 'Turing Machine - Bit Flipper (Invert 0/1)',
@@ -152,25 +175,16 @@ export const binaryIncrementerTM: TMConfig = {
   ],
 };
 
-interface AutomataState {
+interface AutomataState extends PlaybackState {
   automaton: AutomatonDefinition;
   testInput: string;
   executionSteps: ExecutionStep[];
-  currentStepIndex: number;
-  isPlaying: boolean;
-  playbackSpeedMs: number;
   validationErrors: string[];
 
   // Time-Travel Reducers
   setAutomaton: (def: AutomatonDefinition) => void;
   setTestInput: (input: string) => void;
   runSimulation: () => void;
-  stepForward: () => void;
-  stepBackward: () => void;
-  reset: () => void;
-  setStepIndex: (index: number) => void;
-  setIsPlaying: (playing: boolean) => void;
-  setPlaybackSpeedMs: (speedMs: number) => void;
 
   // Builder Drag-and-Drop & TM Mutation Actions
   addState: (id?: string, x?: number, y?: number) => void;
@@ -183,7 +197,7 @@ interface AutomataState {
   removeTMRule: (ruleId: string) => void;
 }
 
-const defaultDFA: DFAConfig = {
+export const defaultDFA: DFAConfig = {
   id: 'dfa-even-zeros',
   name: 'DFA - Binary Strings with Even Zeros',
   type: 'DFA',
@@ -206,40 +220,19 @@ const initialErrors = validateAutomaton(defaultDFA);
 const initialSteps = initialErrors.length === 0 ? computeSimulationSteps(defaultDFA, '10010') : [];
 
 export const useAutomataStore = create<AutomataState>((set) => ({
+  ...createPlaybackSlice<AutomataState>(set, (state) => state.executionSteps.length),
   automaton: defaultDFA,
   testInput: '10010',
   executionSteps: initialSteps,
-  currentStepIndex: 0,
-  isPlaying: false,
-  playbackSpeedMs: 800,
   validationErrors: initialErrors,
 
-  runSimulation: () =>
-    set(
-      produce((draft: AutomataState) => {
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-        } else {
-          draft.executionSteps = [];
-        }
-        draft.currentStepIndex = 0;
-        draft.isPlaying = false;
-      })
-    ),
+  runSimulation: () => set(produce((draft: AutomataState) => recompute(draft))),
 
   setAutomaton: (def) =>
     set(
       produce((draft: AutomataState) => {
         draft.automaton = def;
-        draft.validationErrors = validateAutomaton(def);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(def, draft.testInput);
-        } else {
-          draft.executionSteps = [];
-        }
-        draft.currentStepIndex = 0;
-        draft.isPlaying = false;
+        recompute(draft);
       })
     ),
 
@@ -247,63 +240,7 @@ export const useAutomataStore = create<AutomataState>((set) => ({
     set(
       produce((draft: AutomataState) => {
         draft.testInput = input;
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, input);
-        }
-        draft.currentStepIndex = 0;
-        draft.isPlaying = false;
-      })
-    ),
-
-  stepForward: () =>
-    set(
-      produce((draft: AutomataState) => {
-        if (draft.executionSteps.length > 0 && draft.currentStepIndex < draft.executionSteps.length - 1) {
-          draft.currentStepIndex += 1;
-        } else {
-          draft.isPlaying = false;
-        }
-      })
-    ),
-
-  stepBackward: () =>
-    set(
-      produce((draft: AutomataState) => {
-        if (draft.executionSteps.length > 0 && draft.currentStepIndex > 0) {
-          draft.currentStepIndex -= 1;
-        }
-      })
-    ),
-
-  reset: () =>
-    set(
-      produce((draft: AutomataState) => {
-        draft.currentStepIndex = 0;
-        draft.isPlaying = false;
-      })
-    ),
-
-  setStepIndex: (index) =>
-    set(
-      produce((draft: AutomataState) => {
-        if (index >= 0 && index < draft.executionSteps.length) {
-          draft.currentStepIndex = index;
-        }
-      })
-    ),
-
-  setIsPlaying: (playing) =>
-    set(
-      produce((draft: AutomataState) => {
-        draft.isPlaying = playing;
-      })
-    ),
-
-  setPlaybackSpeedMs: (speedMs) =>
-    set(
-      produce((draft: AutomataState) => {
-        draft.playbackSpeedMs = speedMs;
+        recompute(draft);
       })
     ),
 
@@ -311,136 +248,136 @@ export const useAutomataStore = create<AutomataState>((set) => ({
   addState: (customId, x = 250, y = 200) =>
     set(
       produce((draft: AutomataState) => {
-        const count = draft.automaton.states.length;
-        const newId = customId || `q${count}`;
-        const isFirst = count === 0;
+        const states = draft.automaton.states;
+        const newId = customId && !states.some((s) => s.id === customId) ? customId : nextStateId(states);
+        const isFirst = states.length === 0;
 
-        const newState: StateNode = {
+        states.push({
           id: newId,
           label: newId,
           isStart: isFirst,
           isAccept: false,
           x,
           y,
-        };
-
-        draft.automaton.states.push(newState);
+        });
         if (isFirst) {
           draft.automaton.startStateId = newId;
         }
-
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-        } else {
-          draft.executionSteps = [];
-        }
+        recompute(draft);
       })
     ),
 
   removeElement: (id) =>
     set(
       produce((draft: AutomataState) => {
-        const stateIdx = draft.automaton.states.findIndex((s) => s.id === id);
+        const automaton = draft.automaton;
+        const stateIdx = automaton.states.findIndex((s) => s.id === id);
+
         if (stateIdx !== -1) {
-          draft.automaton.states.splice(stateIdx, 1);
-          if (draft.automaton.type !== 'TM') {
-            const dfaOrNfa = draft.automaton as DFAConfig | NFAConfig;
-            dfaOrNfa.transitions = dfaOrNfa.transitions.filter(
-              (t) => t.from !== id && t.to !== id
-            );
-          } else {
-            const tm = draft.automaton as TMConfig;
-            tm.transitions = tm.transitions.filter(
+          automaton.states.splice(stateIdx, 1);
+
+          if (automaton.type === 'TM') {
+            automaton.transitions = automaton.transitions.filter(
               (t) => t.fromState !== id && t.nextState !== id
             );
+            if (automaton.acceptStateId === id) automaton.acceptStateId = '';
+            if (automaton.rejectStateId === id) automaton.rejectStateId = undefined;
+          } else {
+            automaton.transitions = automaton.transitions.filter((t) => t.from !== id && t.to !== id);
+            automaton.acceptStateIds = automaton.acceptStateIds.filter((accId) => accId !== id);
           }
 
-          if (draft.automaton.startStateId === id) {
-            draft.automaton.startStateId = draft.automaton.states[0]?.id || '';
-            draft.automaton.states.forEach((s) => {
-              s.isStart = s.id === draft.automaton.startStateId;
+          if (automaton.startStateId === id) {
+            automaton.startStateId = automaton.states[0]?.id || '';
+            automaton.states.forEach((s) => {
+              s.isStart = s.id === automaton.startStateId;
             });
           }
-        }
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
+        } else if (automaton.type === 'TM') {
+          automaton.transitions = automaton.transitions.filter((r) => r.id !== id);
         } else {
-          draft.executionSteps = [];
+          // Not a state: treat the id as an edge
+          automaton.transitions = automaton.transitions.filter((t) => t.id !== id);
         }
-        draft.currentStepIndex = 0;
+
+        recompute(draft);
       })
     ),
 
-  addEdge: (source, target, symbol) =>
+  addEdge: (source, target, symbolInput) =>
     set(
       produce((draft: AutomataState) => {
-        if (draft.automaton.type === 'TM') return;
-        const edgeId = `t_${source}_${target}_${symbol}_${Date.now()}`;
-        if (draft.automaton.type === 'DFA') {
-          draft.automaton.transitions = draft.automaton.transitions.filter(
-            (t) => !(t.from === source && t.symbol === symbol)
-          );
+        const automaton = draft.automaton;
+        if (automaton.type === 'TM') return;
+
+        // "0, 1" creates one edge per symbol
+        const symbols = Array.from(
+          new Set(symbolInput.split(',').map((sym) => sym.trim()).filter(Boolean))
+        );
+
+        for (const symbol of symbols) {
+          if (automaton.type === 'DFA') {
+            // A DFA has at most one edge per (state, symbol): replace any existing one
+            automaton.transitions = automaton.transitions.filter(
+              (t) => !(t.from === source && t.symbol === symbol)
+            );
+          } else if (automaton.transitions.some((t) => t.from === source && t.to === target && t.symbol === symbol)) {
+            continue;
+          }
+
+          automaton.transitions.push({
+            id: `t_${source}_${target}_${symbol}_${Date.now()}`,
+            from: source,
+            to: target,
+            symbol,
+          });
+
+          if (!isEpsilon(symbol) && !automaton.alphabet.includes(symbol)) {
+            automaton.alphabet.push(symbol);
+          }
         }
-        draft.automaton.transitions.push({
-          id: edgeId,
-          from: source,
-          to: target,
-          symbol,
-        });
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-        } else {
-          draft.executionSteps = [];
-        }
+
+        recompute(draft);
       })
     ),
 
   toggleAcceptState: (id) =>
     set(
       produce((draft: AutomataState) => {
-        const state = draft.automaton.states.find((s) => s.id === id);
-        if (state) {
-          state.isAccept = !state.isAccept;
-          if (draft.automaton.type === 'TM') {
-            const tm = draft.automaton as TMConfig;
-            if (state.isAccept) tm.acceptStateId = id;
-          } else {
-            const dfaOrNfa = draft.automaton as DFAConfig | NFAConfig;
-            if (state.isAccept) {
-              if (!dfaOrNfa.acceptStateIds.includes(id)) dfaOrNfa.acceptStateIds.push(id);
-            } else {
-              dfaOrNfa.acceptStateIds = dfaOrNfa.acceptStateIds.filter((accId) => accId !== id);
-            }
+        const automaton = draft.automaton;
+        const state = automaton.states.find((s) => s.id === id);
+        if (!state) return;
+
+        state.isAccept = !state.isAccept;
+        if (automaton.type === 'TM') {
+          // A TM has exactly one accept state
+          if (state.isAccept) {
+            automaton.states.forEach((s) => {
+              if (s.id !== id) s.isAccept = false;
+            });
+            automaton.acceptStateId = id;
+          } else if (automaton.acceptStateId === id) {
+            automaton.acceptStateId = '';
           }
-          draft.validationErrors = validateAutomaton(draft.automaton);
-          if (draft.validationErrors.length === 0) {
-            draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-          } else {
-            draft.executionSteps = [];
-          }
+        } else if (state.isAccept) {
+          if (!automaton.acceptStateIds.includes(id)) automaton.acceptStateIds.push(id);
+        } else {
+          automaton.acceptStateIds = automaton.acceptStateIds.filter((accId) => accId !== id);
         }
+
+        recompute(draft);
       })
     ),
 
   setStartState: (id) =>
     set(
       produce((draft: AutomataState) => {
-        const state = draft.automaton.states.find((s) => s.id === id);
-        if (state) {
-          draft.automaton.startStateId = id;
-          draft.automaton.states.forEach((s) => {
-            s.isStart = s.id === id;
-          });
-          draft.validationErrors = validateAutomaton(draft.automaton);
-          if (draft.validationErrors.length === 0) {
-            draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-          } else {
-            draft.executionSteps = [];
-          }
-        }
+        if (!draft.automaton.states.some((s) => s.id === id)) return;
+        draft.automaton.startStateId = id;
+        draft.automaton.states.forEach((s) => {
+          s.isStart = s.id === id;
+        });
+        recompute(draft);
       })
     ),
 
@@ -459,10 +396,10 @@ export const useAutomataStore = create<AutomataState>((set) => ({
     set(
       produce((draft: AutomataState) => {
         if (draft.automaton.type !== 'TM') return;
-        const tm = draft.automaton as TMConfig;
+        const tm = draft.automaton;
         const newRule: TMTransitionRule = {
           ...rule,
-          id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          id: `rule_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         };
         // Overwrite rule for same (fromState, read) if exists
         const existingIdx = tm.transitions.findIndex(
@@ -473,10 +410,7 @@ export const useAutomataStore = create<AutomataState>((set) => ({
         } else {
           tm.transitions.push(newRule);
         }
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-        }
+        recompute(draft);
       })
     ),
 
@@ -484,12 +418,8 @@ export const useAutomataStore = create<AutomataState>((set) => ({
     set(
       produce((draft: AutomataState) => {
         if (draft.automaton.type !== 'TM') return;
-        const tm = draft.automaton as TMConfig;
-        tm.transitions = tm.transitions.filter((r) => r.id !== ruleId);
-        draft.validationErrors = validateAutomaton(draft.automaton);
-        if (draft.validationErrors.length === 0) {
-          draft.executionSteps = computeSimulationSteps(draft.automaton, draft.testInput);
-        }
+        draft.automaton.transitions = draft.automaton.transitions.filter((r) => r.id !== ruleId);
+        recompute(draft);
       })
     ),
 }));

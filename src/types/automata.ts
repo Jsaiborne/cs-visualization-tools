@@ -83,8 +83,8 @@ export interface ExecutionStep {
   currentStateId: string;           // Active state ID for DFA/TM
   currentNFAStateIds?: string[];     // Active state set for NFA (supports non-determinism)
   currentSymbol: string | null;      // Character being processed at this step
-  consumedInput: string;            // Substring processed so far
-  remainingInput: string;           // Substring left to process
+  consumedInput: string;            // Input before currentSymbol
+  remainingInput: string;           // Input after currentSymbol
   status: StepStatus;               // Snapshot status
   description: string;              // Human-readable step explanation
   activeTransitionId?: string;       // ID of edge or rule highlighted on canvas/table

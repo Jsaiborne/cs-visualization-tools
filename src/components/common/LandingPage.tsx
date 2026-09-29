@@ -14,7 +14,7 @@ import {
 import { useUIStore, type ActiveModule } from '../../store/useUIStore';
 
 export const LandingPage: React.FC = () => {
-  const { setActiveModule } = useUIStore();
+  const setActiveModule = useUIStore((state) => state.setActiveModule);
 
   const moduleCards: {
     id: ActiveModule;

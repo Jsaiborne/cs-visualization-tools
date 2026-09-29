@@ -32,6 +32,24 @@ export function generateTAC(ast: ASTNode | null): TACInstruction[] {
       return node.name;
     }
 
+    if (node.type === 'UnaryExpression') {
+      const arg1 = traverse(node.argument);
+      const tempVar = `t${tempCounter++}`;
+
+      instructions.push({
+        op: node.operator,
+        arg1,
+        arg2: null,
+        result: tempVar,
+        originalRange: {
+          start: node.start,
+          end: node.end,
+        },
+      });
+
+      return tempVar;
+    }
+
     if (node.type === 'BinaryExpression') {
       // Post-order traversal: visit children first
       const arg1 = traverse(node.left);

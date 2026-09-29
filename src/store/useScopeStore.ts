@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { produce } from 'immer';
 import { parseScopeLanguage, type ProgramScopeNode } from '../core/compiler/scopeParser';
 import { analyzeScopes, type ScopeExecutionStep } from '../core/compiler/semanticAnalyzer';
+import { createPlaybackSlice, type PlaybackState } from './playback';
 
 export interface ScopePreset {
   id: string;
@@ -48,22 +49,13 @@ let b = 20;
   },
 ];
 
-interface ScopeState {
+interface ScopeState extends PlaybackState {
   sourceCode: string;
   ast: ProgramScopeNode | null;
   scopeSteps: ScopeExecutionStep[];
-  currentStepIndex: number;
-  isPlaying: boolean;
-  playbackSpeedMs: number;
   parseError: string | null;
 
   setSourceCode: (code: string) => void;
-  stepForward: () => void;
-  stepBackward: () => void;
-  reset: () => void;
-  setCurrentStepIndex: (index: number) => void;
-  setIsPlaying: (isPlaying: boolean) => void;
-  setPlaybackSpeedMs: (speed: number) => void;
   loadPreset: (presetId: string) => void;
 }
 
@@ -94,9 +86,8 @@ function computeScopeState(sourceCode: string) {
 const initialComputed = computeScopeState(defaultPreset.code);
 
 export const useScopeStore = create<ScopeState>((set) => ({
+  ...createPlaybackSlice<ScopeState>(set, (state) => state.scopeSteps.length),
   ...initialComputed,
-  isPlaying: false,
-  playbackSpeedMs: 800,
 
   setSourceCode: (code: string) => {
     set(
@@ -110,42 +101,6 @@ export const useScopeStore = create<ScopeState>((set) => ({
         draft.isPlaying = false;
       })
     );
-  },
-
-  stepForward: () => {
-    set((state) => {
-      if (state.scopeSteps.length > 0 && state.currentStepIndex < state.scopeSteps.length - 1) {
-        return { currentStepIndex: state.currentStepIndex + 1 };
-      }
-      return { isPlaying: false };
-    });
-  },
-
-  stepBackward: () => {
-    set((state) => {
-      if (state.scopeSteps.length > 0 && state.currentStepIndex > 0) {
-        return { currentStepIndex: state.currentStepIndex - 1 };
-      }
-      return {};
-    });
-  },
-
-  reset: () => {
-    set({ currentStepIndex: 0, isPlaying: false });
-  },
-
-  setCurrentStepIndex: (currentStepIndex: number) => {
-    set((state) => ({
-      currentStepIndex: Math.max(0, Math.min(currentStepIndex, state.scopeSteps.length - 1)),
-    }));
-  },
-
-  setIsPlaying: (isPlaying: boolean) => {
-    set({ isPlaying });
-  },
-
-  setPlaybackSpeedMs: (playbackSpeedMs: number) => {
-    set({ playbackSpeedMs });
   },
 
   loadPreset: (presetId: string) => {

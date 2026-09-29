@@ -13,6 +13,8 @@ interface UIState {
   showToast: (msg: string) => void;
 }
 
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useUIStore = create<UIState>((set) => ({
   activeModule: 'HOME',
   isSidebarOpen: true,
@@ -22,8 +24,10 @@ export const useUIStore = create<UIState>((set) => ({
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setActiveTab: (activeTab) => set({ activeTab }),
   showToast: (msg: string) => {
+    if (toastTimer) clearTimeout(toastTimer);
     set({ toastMessage: msg });
-    setTimeout(() => {
+    toastTimer = setTimeout(() => {
+      toastTimer = null;
       set({ toastMessage: null });
     }, 3000);
   },

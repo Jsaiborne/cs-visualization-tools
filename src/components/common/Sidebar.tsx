@@ -1,10 +1,11 @@
 import React from 'react';
 import { Play, Layers, Sliders, CheckCircle2, XCircle, ArrowRight, Clock, AlertTriangle } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
 
 export const Sidebar: React.FC = () => {
-  const { activeModule } = useUIStore();
+  const activeModule = useUIStore((state) => state.activeModule);
   const {
     automaton,
     testInput,
@@ -13,8 +14,19 @@ export const Sidebar: React.FC = () => {
     executionSteps,
     currentStepIndex,
     setStepIndex,
-    validationErrors
-  } = useAutomataStore();
+    validationErrors,
+  } = useAutomataStore(
+    useShallow((state) => ({
+      automaton: state.automaton,
+      testInput: state.testInput,
+      setTestInput: state.setTestInput,
+      runSimulation: state.runSimulation,
+      executionSteps: state.executionSteps,
+      currentStepIndex: state.currentStepIndex,
+      setStepIndex: state.setStepIndex,
+      validationErrors: state.validationErrors,
+    }))
+  );
 
   const currentStep = executionSteps[currentStepIndex] || {
     stepIndex: 0,
@@ -217,7 +229,7 @@ export const Sidebar: React.FC = () => {
               </span>
             )}
             <span style={{ color: 'var(--text-secondary)' }}>
-              {currentStep.remainingInput.slice(currentStep.currentSymbol ? 1 : 0)}
+              {currentStep.remainingInput}
             </span>
           </div>
         </div>

@@ -1,12 +1,30 @@
 import React from 'react';
 import { Cpu, RotateCcw, Sparkles } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore, defaultTM, binaryIncrementerTM } from '../../store/useAutomataStore';
 import { TuringMachineTape } from './TuringMachineTape';
 import { TuringMachineTable } from './TuringMachineTable';
 
 export const TuringMachineView: React.FC = () => {
-  const { automaton, setAutomaton, testInput, setTestInput, executionSteps, currentStepIndex, runSimulation } =
-    useAutomataStore();
+  const {
+    automaton,
+    setAutomaton,
+    testInput,
+    setTestInput,
+    executionSteps,
+    currentStepIndex,
+    runSimulation,
+  } = useAutomataStore(
+    useShallow((state) => ({
+      automaton: state.automaton,
+      setAutomaton: state.setAutomaton,
+      testInput: state.testInput,
+      setTestInput: state.setTestInput,
+      executionSteps: state.executionSteps,
+      currentStepIndex: state.currentStepIndex,
+      runSimulation: state.runSimulation,
+    }))
+  );
 
   const currentStep = executionSteps[currentStepIndex];
 

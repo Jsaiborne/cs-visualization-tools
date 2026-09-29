@@ -4,14 +4,41 @@ import { useGrammarStore } from '../store/useGrammarStore';
 import { useCompilerStore } from '../store/useCompilerStore';
 import { useScopeStore } from '../store/useScopeStore';
 
+// Payload formats: 'z.' + deflate-raw + base64url (current), 'j.' + base64url JSON
+// (browsers without CompressionStream), or an unprefixed legacy btoa(encodeURIComponent(json)).
+const COMPRESSED_PREFIX = 'z.';
+const PLAIN_PREFIX = 'j.';
+
+function toBase64Url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function fromBase64Url(encoded: string): Uint8Array<ArrayBuffer> {
+  const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(base64 + '='.repeat((4 - (base64.length % 4)) % 4));
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
+
+async function transform(
+  bytes: Uint8Array<ArrayBuffer>,
+  stream: CompressionStream | DecompressionStream
+): Promise<Uint8Array<ArrayBuffer>> {
+  const output = new Blob([bytes]).stream().pipeThrough(stream);
+  return new Uint8Array(await new Response(output).arrayBuffer());
+}
+
 /**
- * Safely serialize any JS object to a URL-safe Base64 string.
+ * Serialize any JS object into a compact, URL-safe string.
  */
-export function serializeState(data: any): string {
+export async function serializeState(data: unknown): Promise<string> {
   try {
-    const jsonStr = JSON.stringify(data);
-    const encodedStr = encodeURIComponent(jsonStr);
-    return btoa(encodedStr);
+    const json = new TextEncoder().encode(JSON.stringify(data));
+    if (typeof CompressionStream === 'undefined') {
+      return PLAIN_PREFIX + toBase64Url(json);
+    }
+    return COMPRESSED_PREFIX + toBase64Url(await transform(json, new CompressionStream('deflate-raw')));
   } catch (err) {
     console.error('Failed to serialize state:', err);
     return '';
@@ -19,13 +46,20 @@ export function serializeState(data: any): string {
 }
 
 /**
- * Safely deserialize a URL Base64 string back into a JS object.
+ * Deserialize a string produced by serializeState (or a legacy share link) back into a JS object.
  */
-export function deserializeState<T>(encoded: string): T | null {
+export async function deserializeState<T>(encoded: string): Promise<T | null> {
   try {
-    const decodedStr = atob(encoded);
-    const jsonStr = decodeURIComponent(decodedStr);
-    return JSON.parse(jsonStr) as T;
+    let json: string;
+    if (encoded.startsWith(COMPRESSED_PREFIX)) {
+      const bytes = await transform(fromBase64Url(encoded.slice(COMPRESSED_PREFIX.length)), new DecompressionStream('deflate-raw'));
+      json = new TextDecoder().decode(bytes);
+    } else if (encoded.startsWith(PLAIN_PREFIX)) {
+      json = new TextDecoder().decode(fromBase64Url(encoded.slice(PLAIN_PREFIX.length)));
+    } else {
+      json = decodeURIComponent(atob(encoded));
+    }
+    return JSON.parse(json) as T;
   } catch (err) {
     console.error('Failed to deserialize state:', err);
     return null;
@@ -35,13 +69,13 @@ export function deserializeState<T>(encoded: string): T | null {
 /**
  * Generate a shareable URL containing serialized state for the current active module.
  */
-export function getShareableURL(): string {
+export async function getShareableURL(): Promise<string> {
   const activeModule = useUIStore.getState().activeModule;
-  let statePayload: any = null;
+  let statePayload: unknown = null;
 
   if (activeModule === 'AUTOMATA' || activeModule === 'REGEX') {
-    const { automaton } = useAutomataStore.getState();
-    statePayload = { automaton };
+    const { automaton, testInput } = useAutomataStore.getState();
+    statePayload = { automaton, testInput };
   } else if (activeModule === 'GRAMMAR') {
     const { grammarText, testInput } = useGrammarStore.getState();
     statePayload = { grammarText, testInput };
@@ -51,7 +85,7 @@ export function getShareableURL(): string {
     statePayload = { sourceCode, scopeCode };
   }
 
-  const encodedState = statePayload ? serializeState(statePayload) : '';
+  const encodedState = statePayload ? await serializeState(statePayload) : '';
   const url = new URL(window.location.href);
   url.searchParams.set('module', activeModule);
   if (encodedState) {
@@ -64,9 +98,11 @@ export function getShareableURL(): string {
 }
 
 /**
- * Read query parameters on app mount and hydrate stores if valid state is found.
+ * Read query parameters on startup and hydrate stores if valid state is found.
+ * The active module is set synchronously (call this before the first render to avoid
+ * flashing the home page); the encoded state is decoded asynchronously.
  */
-export function loadStateFromURL(): boolean {
+export async function loadStateFromURL(): Promise<boolean> {
   try {
     const params = new URLSearchParams(window.location.search);
     const moduleParam = params.get('module') as ActiveModule | null;
@@ -81,9 +117,12 @@ export function loadStateFromURL(): boolean {
     }
 
     if (stateParam) {
-      const data = deserializeState<any>(stateParam);
+      const data = await deserializeState<any>(stateParam);
       if (data && typeof data === 'object') {
         if (data.automaton && typeof data.automaton === 'object' && Array.isArray(data.automaton.states) && (moduleParam === 'AUTOMATA' || moduleParam === 'REGEX')) {
+          if (typeof data.testInput === 'string') {
+            useAutomataStore.getState().setTestInput(data.testInput);
+          }
           useAutomataStore.getState().setAutomaton(data.automaton);
         }
         if (typeof data.grammarText === 'string' && moduleParam === 'GRAMMAR') {

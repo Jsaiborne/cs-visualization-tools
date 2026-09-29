@@ -29,6 +29,8 @@ export interface ScopeExecutionStep {
   activeScopeId: string;
   activeScopeStack: Scope[];
   targetVariable?: string;
+  /** Set when this step reports a semantic error instead of a successful action. */
+  isError?: boolean;
 }
 
 /**
@@ -63,6 +65,49 @@ export function analyzeScopes(ast: ProgramScopeNode): ScopeExecutionStep[] {
     activeScopeId: globalScope.id,
     activeScopeStack: cloneScopeStack(activeScopeStack),
   });
+
+  /** Finds the innermost scope on the active stack that declares `name`. */
+  function lookup(name: string): Scope | null {
+    for (let i = activeScopeStack.length - 1; i >= 0; i--) {
+      if (activeScopeStack[i].variables[name]) {
+        return activeScopeStack[i];
+      }
+    }
+    return null;
+  }
+
+  function pushError(line: number, action: string, description: string, scopeId: string, targetVariable?: string) {
+    steps.push({
+      stepIndex: steps.length,
+      currentLine: line,
+      action: `Error: ${action}`,
+      description,
+      activeScopeId: scopeId,
+      activeScopeStack: cloneScopeStack(activeScopeStack),
+      targetVariable,
+      isError: true,
+    });
+  }
+
+  /**
+   * Resolves a right-hand-side operand to a value. Identifier references are looked up
+   * through the scope chain; an undeclared reference emits an error step and returns null.
+   */
+  function resolveValue(raw: string, kind: 'number' | 'identifier', line: number): string | null {
+    if (kind === 'number') return raw;
+    const scope = lookup(raw);
+    if (!scope) {
+      pushError(
+        line,
+        `Undeclared '${raw}'`,
+        `Use of undeclared identifier '${raw}'. It is not visible from ${activeScopeStack[activeScopeStack.length - 1].name}.`,
+        activeScopeStack[activeScopeStack.length - 1].id,
+        raw
+      );
+      return null;
+    }
+    return scope.variables[raw].value;
+  }
 
   function traverseNodes(nodes: ScopeASTNode[]) {
     for (const node of nodes) {
@@ -107,6 +152,20 @@ export function analyzeScopes(ast: ProgramScopeNode): ScopeExecutionStep[] {
         const declNode = node as VariableDeclarationNode;
         const currentScope = activeScopeStack[activeScopeStack.length - 1];
 
+        if (currentScope.variables[declNode.name]) {
+          pushError(
+            declNode.line,
+            `Redeclaration of '${declNode.name}'`,
+            `'${declNode.name}' is already declared in ${currentScope.name} (line ${currentScope.variables[declNode.name].declaredLine}). Redeclaration ignored.`,
+            currentScope.id,
+            declNode.name
+          );
+          continue;
+        }
+
+        const initValue = resolveValue(declNode.initValue, declNode.initKind, declNode.line);
+        if (initValue === null) continue;
+
         // Check if variable shadows an outer scope variable
         let isShadowing = false;
         for (let i = activeScopeStack.length - 2; i >= 0; i--) {
@@ -120,7 +179,7 @@ export function analyzeScopes(ast: ProgramScopeNode): ScopeExecutionStep[] {
         currentScope.variables[declNode.name] = {
           name: declNode.name,
           type: declNode.varType || 'number',
-          value: declNode.initValue,
+          value: initValue,
           declaredLine: declNode.line,
           isShadowing,
         };
@@ -130,54 +189,41 @@ export function analyzeScopes(ast: ProgramScopeNode): ScopeExecutionStep[] {
           currentLine: declNode.line,
           action: `Declared '${declNode.name}' in ${currentScope.name}`,
           description: isShadowing
-            ? `Declared '${declNode.name} = ${declNode.initValue}' in ${currentScope.name} (shadows '${declNode.name}' in parent scope).`
-            : `Declared '${declNode.name} = ${declNode.initValue}' in ${currentScope.name}.`,
+            ? `Declared '${declNode.name} = ${initValue}' in ${currentScope.name} (shadows '${declNode.name}' in parent scope).`
+            : `Declared '${declNode.name} = ${initValue}' in ${currentScope.name}.`,
           activeScopeId: currentScope.id,
           activeScopeStack: cloneScopeStack(activeScopeStack),
           targetVariable: declNode.name,
         });
       } else if (node.type === 'AssignmentExpression') {
         const assignNode = node as AssignmentExpressionNode;
+        const targetScope = lookup(assignNode.name);
 
-        // Search active stack top-to-bottom for declaration scope
-        let targetScope: Scope | null = null;
-        for (let i = activeScopeStack.length - 1; i >= 0; i--) {
-          if (activeScopeStack[i].variables[assignNode.name]) {
-            targetScope = activeScopeStack[i];
-            break;
-          }
-        }
-
-        if (targetScope) {
-          targetScope.variables[assignNode.name].value = assignNode.value;
-          steps.push({
-            stepIndex: steps.length,
-            currentLine: assignNode.line,
-            action: `Assigned '${assignNode.name} = ${assignNode.value}' in ${targetScope.name}`,
-            description: `Updated variable '${assignNode.name}' value to ${assignNode.value} in ${targetScope.name}.`,
-            activeScopeId: targetScope.id,
-            activeScopeStack: cloneScopeStack(activeScopeStack),
-            targetVariable: assignNode.name,
-          });
-        } else {
-          // Undeclared assignment fallback into current top scope
+        if (!targetScope) {
           const currentScope = activeScopeStack[activeScopeStack.length - 1];
-          currentScope.variables[assignNode.name] = {
-            name: assignNode.name,
-            type: 'number',
-            value: assignNode.value,
-            declaredLine: assignNode.line,
-          };
-          steps.push({
-            stepIndex: steps.length,
-            currentLine: assignNode.line,
-            action: `Assigned '${assignNode.name} = ${assignNode.value}' (Implicit Decl)`,
-            description: `Variable '${assignNode.name}' was assigned without prior declaration. Added to ${currentScope.name}.`,
-            activeScopeId: currentScope.id,
-            activeScopeStack: cloneScopeStack(activeScopeStack),
-            targetVariable: assignNode.name,
-          });
+          pushError(
+            assignNode.line,
+            `Undeclared '${assignNode.name}'`,
+            `Cannot assign to '${assignNode.name}': it is not declared in any enclosing scope. Declare it with 'let' first.`,
+            currentScope.id,
+            assignNode.name
+          );
+          continue;
         }
+
+        const value = resolveValue(assignNode.value, assignNode.valueKind, assignNode.line);
+        if (value === null) continue;
+
+        targetScope.variables[assignNode.name].value = value;
+        steps.push({
+          stepIndex: steps.length,
+          currentLine: assignNode.line,
+          action: `Assigned '${assignNode.name} = ${value}' in ${targetScope.name}`,
+          description: `Updated variable '${assignNode.name}' value to ${value} in ${targetScope.name}.`,
+          activeScopeId: targetScope.id,
+          activeScopeStack: cloneScopeStack(activeScopeStack),
+          targetVariable: assignNode.name,
+        });
       }
     }
   }

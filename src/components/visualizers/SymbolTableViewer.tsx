@@ -14,7 +14,12 @@ import {
   ArrowUp,
   ShieldAlert,
 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useScopeStore, SCOPE_PRESETS } from '../../store/useScopeStore';
+
+type CodeEditor = Parameters<OnMount>[0];
+type MonacoApi = Parameters<OnMount>[1];
+type DecorationsCollection = ReturnType<CodeEditor['createDecorationsCollection']>;
 
 export const SymbolTableViewer: React.FC = () => {
   const {
@@ -29,15 +34,30 @@ export const SymbolTableViewer: React.FC = () => {
     reset,
     parseError,
     loadPreset,
-  } = useScopeStore();
+  } = useScopeStore(
+    useShallow((state) => ({
+      sourceCode: state.sourceCode,
+      setSourceCode: state.setSourceCode,
+      scopeSteps: state.scopeSteps,
+      currentStepIndex: state.currentStepIndex,
+      isPlaying: state.isPlaying,
+      setIsPlaying: state.setIsPlaying,
+      stepForward: state.stepForward,
+      stepBackward: state.stepBackward,
+      reset: state.reset,
+      parseError: state.parseError,
+      loadPreset: state.loadPreset,
+    }))
+  );
 
-  const editorRef = useRef<any>(null);
-  const monacoRef = useRef<any>(null);
-  const decorationsRef = useRef<string[]>([]);
+  const editorRef = useRef<CodeEditor | null>(null);
+  const monacoRef = useRef<MonacoApi | null>(null);
+  const decorationsRef = useRef<DecorationsCollection | null>(null);
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+    decorationsRef.current = editor.createDecorationsCollection();
   };
 
   const currentStep = scopeSteps[currentStepIndex];
@@ -46,7 +66,7 @@ export const SymbolTableViewer: React.FC = () => {
 
   // Auto-scroll Monaco Editor to active line and highlight it
   useEffect(() => {
-    if (!editorRef.current || !monacoRef.current || !currentStep) return;
+    if (!editorRef.current || !monacoRef.current || !decorationsRef.current || !currentStep) return;
     const editor = editorRef.current;
     const monaco = monacoRef.current;
     const model = editor.getModel();
@@ -59,7 +79,7 @@ export const SymbolTableViewer: React.FC = () => {
 
       const maxColumn = model.getLineMaxColumn(line);
 
-      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
+      decorationsRef.current.set([
         {
           range: new monaco.Range(line, 1, line, maxColumn),
           options: {
@@ -69,9 +89,9 @@ export const SymbolTableViewer: React.FC = () => {
         },
       ]);
     } catch {
-      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+      decorationsRef.current.clear();
     }
-  }, [currentStepIndex, currentStep]);
+  }, [currentStep]);
 
   // Re-order stack so top of stack is rendered on TOP visually, and Global Scope is at the BOTTOM
   const displayStack = [...activeScopeStack].reverse();
@@ -310,7 +330,7 @@ export const SymbolTableViewer: React.FC = () => {
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '4px',
-                  background: 'var(--accent-purple)',
+                  background: currentStep.isError ? 'var(--accent-rose)' : 'var(--accent-purple)',
                   color: '#ffffff',
                   letterSpacing: '0.03em',
                   textTransform: 'uppercase',

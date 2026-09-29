@@ -6,6 +6,7 @@ import type {
   NFATransitionTable,
   ExecutionStep
 } from '../types/automata';
+import { isEpsilon } from './epsilon';
 
 /**
  * Builds an O(1) lookup table for DFA transitions: fromState -> (symbol -> toState)
@@ -72,7 +73,7 @@ export function simulateDFA(dfa: DFAConfig, inputString: string): ExecutionStep[
   // Traversal loop
   for (let i = 0; i < inputString.length; i++) {
     const symbol = inputString[i];
-    const consumed = inputString.slice(0, i + 1);
+    const consumed = inputString.slice(0, i);
     const remaining = inputString.slice(i + 1);
 
     // Validate symbol against alphabet
@@ -81,8 +82,8 @@ export function simulateDFA(dfa: DFAConfig, inputString: string): ExecutionStep[
         stepIndex: i + 1,
         currentStateId: currentState,
         currentSymbol: symbol,
-        consumedInput: inputString.slice(0, i),
-        remainingInput: inputString.slice(i),
+        consumedInput: consumed,
+        remainingInput: remaining,
         status: 'REJECTED',
         description: `Invalid symbol '${symbol}' not in alphabet Σ = {${dfa.alphabet.join(', ')}}`
       });
@@ -99,8 +100,8 @@ export function simulateDFA(dfa: DFAConfig, inputString: string): ExecutionStep[
         stepIndex: i + 1,
         currentStateId: currentState,
         currentSymbol: symbol,
-        consumedInput: inputString.slice(0, i),
-        remainingInput: inputString.slice(i),
+        consumedInput: consumed,
+        remainingInput: remaining,
         status: 'REJECTED',
         description: `No transition defined from state ${currentState} on symbol '${symbol}'. Automaton trapped.`
       });
@@ -149,17 +150,18 @@ export function getEpsilonClosureWithEdges(
 
   while (stack.length > 0) {
     const current = stack.pop()!;
-    const epsTargets = table[current]?.['ε'] || table[current]?.['e'] || table[current]?.['eps'] || [];
-    for (const target of epsTargets) {
-      const edge = transitions.find(
-        (t) => t.from === current && t.to === target && ['ε', 'e', 'eps'].includes(t.symbol)
-      );
-      if (edge) {
-        traversedEdgeIds.add(edge.id);
-      }
-      if (!closure.has(target)) {
-        closure.add(target);
-        stack.push(target);
+    const row = table[current] || {};
+    for (const symbol of Object.keys(row)) {
+      if (!isEpsilon(symbol)) continue;
+      for (const target of row[symbol]) {
+        const edge = transitions.find((t) => t.from === current && t.to === target && t.symbol === symbol);
+        if (edge) {
+          traversedEdgeIds.add(edge.id);
+        }
+        if (!closure.has(target)) {
+          closure.add(target);
+          stack.push(target);
+        }
       }
     }
   }
@@ -174,21 +176,7 @@ export function getEpsilonClosureWithEdges(
  * Computes Epsilon (ε) Closure for an NFA state set
  */
 export function getEpsilonClosure(stateIds: string[], table: NFATransitionTable): string[] {
-  const closure = new Set<string>(stateIds);
-  const stack = [...stateIds];
-
-  while (stack.length > 0) {
-    const current = stack.pop()!;
-    const epsTargets = table[current]?.['ε'] || table[current]?.['e'] || table[current]?.['eps'] || [];
-    for (const target of epsTargets) {
-      if (!closure.has(target)) {
-        closure.add(target);
-        stack.push(target);
-      }
-    }
-  }
-
-  return Array.from(closure);
+  return getEpsilonClosureWithEdges(stateIds, table, []).states;
 }
 
 /**
@@ -217,7 +205,7 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
 
   for (let i = 0; i < inputString.length; i++) {
     const symbol = inputString[i];
-    const consumed = inputString.slice(0, i + 1);
+    const consumed = inputString.slice(0, i);
     const remaining = inputString.slice(i + 1);
 
     const symbolEdges: string[] = [];
@@ -242,8 +230,8 @@ export function simulateNFA(nfa: NFAConfig, inputString: string): ExecutionStep[
         currentStateId: 'Ø',
         currentNFAStateIds: [],
         currentSymbol: symbol,
-        consumedInput: inputString.slice(0, i),
-        remainingInput: inputString.slice(i),
+        consumedInput: consumed,
+        remainingInput: remaining,
         status: 'REJECTED',
         description: `No active paths remaining on symbol '${symbol}'. Computation halted.`
       });

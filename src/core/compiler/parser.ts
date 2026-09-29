@@ -5,11 +5,13 @@ import type { Token, ASTNode } from '../../types/compiler';
  * Constructs a strongly-typed Abstract Syntax Tree (AST) with exact
  * character index offset ranges [start:end] for source code highlighting.
  *
- * Grammar Rules (Precedence: Primary > Multiplicative > Additive):
+ * Grammar Rules (Precedence: Primary > Power > Unary > Multiplicative > Additive):
  *   Program                ::= Expression
  *   Expression             ::= AdditiveExpression
  *   AdditiveExpression     ::= MultiplicativeExpression ( ('+' | '-') MultiplicativeExpression )*
- *   MultiplicativeExpression ::= PrimaryExpression ( ('*' | '/' | '%' | '^') PrimaryExpression )*
+ *   MultiplicativeExpression ::= UnaryExpression ( ('*' | '/' | '%') UnaryExpression )*
+ *   UnaryExpression        ::= ('+' | '-') UnaryExpression | PowerExpression
+ *   PowerExpression        ::= PrimaryExpression ( '^' UnaryExpression )?   (right-associative)
  *   PrimaryExpression      ::= NUMBER | IDENTIFIER | KEYWORD | '(' Expression ')'
  */
 export class Parser {
@@ -95,15 +97,15 @@ export class Parser {
   }
 
   private parseMultiplicative(): ASTNode {
-    let left = this.parsePrimary();
+    let left = this.parseUnary();
 
     while (
       this.peek() &&
       this.peek()?.type === 'OPERATOR' &&
-      ['*', '/', '%', '^'].includes(this.peek()!.value)
+      ['*', '/', '%'].includes(this.peek()!.value)
     ) {
       const opToken = this.consume();
-      const right = this.parsePrimary();
+      const right = this.parseUnary();
 
       left = {
         type: 'BinaryExpression',
@@ -116,6 +118,41 @@ export class Parser {
     }
 
     return left;
+  }
+
+  private parseUnary(): ASTNode {
+    const token = this.peek();
+    if (token?.type === 'OPERATOR' && (token.value === '-' || token.value === '+')) {
+      const opToken = this.consume();
+      const argument = this.parseUnary();
+      return {
+        type: 'UnaryExpression',
+        operator: opToken.value,
+        argument,
+        start: opToken.start,
+        end: argument.end,
+      };
+    }
+    return this.parsePower();
+  }
+
+  private parsePower(): ASTNode {
+    const base = this.parsePrimary();
+    const token = this.peek();
+    if (token?.type === 'OPERATOR' && token.value === '^') {
+      this.consume();
+      // Right-associative: 2^3^2 = 2^(3^2); exponent may carry a sign: 2^-1
+      const exponent = this.parseUnary();
+      return {
+        type: 'BinaryExpression',
+        operator: '^',
+        left: base,
+        right: exponent,
+        start: base.start,
+        end: exponent.end,
+      };
+    }
+    return base;
   }
 
   private parsePrimary(): ASTNode {

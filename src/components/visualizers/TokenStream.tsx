@@ -1,10 +1,21 @@
 import React from 'react';
 import { Layers, Hash, Code2, AlertTriangle, Brackets } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useCompilerStore } from '../../store/useCompilerStore';
 import type { TokenType } from '../../types/compiler';
 
 export const TokenStream: React.FC = () => {
-  const { tokens, activeTokenIndex, setActiveTokenIndex } = useCompilerStore();
+  const {
+    tokens,
+    activeTokenIndex,
+    setActiveTokenIndex,
+  } = useCompilerStore(
+    useShallow((state) => ({
+      tokens: state.tokens,
+      activeTokenIndex: state.activeTokenIndex,
+      setActiveTokenIndex: state.setActiveTokenIndex,
+    }))
+  );
 
   const getTokenStyle = (type: TokenType) => {
     switch (type) {

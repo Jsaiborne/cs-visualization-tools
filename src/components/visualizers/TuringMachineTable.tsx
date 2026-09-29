@@ -1,10 +1,25 @@
 import React, { useState } from 'react';
 import { Table, Plus, Trash2, ArrowRight, ArrowLeft, CircleDot } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import type { TMConfig, TMTransitionRule, TMDirection } from '../../types/automata';
 
 export const TuringMachineTable: React.FC = () => {
-  const { automaton, executionSteps, currentStepIndex, addTMRule, removeTMRule } = useAutomataStore();
+  const {
+    automaton,
+    executionSteps,
+    currentStepIndex,
+    addTMRule,
+    removeTMRule,
+  } = useAutomataStore(
+    useShallow((state) => ({
+      automaton: state.automaton,
+      executionSteps: state.executionSteps,
+      currentStepIndex: state.currentStepIndex,
+      addTMRule: state.addTMRule,
+      removeTMRule: state.removeTMRule,
+    }))
+  );
   const tm = automaton.type === 'TM' ? (automaton as TMConfig) : null;
   const rules = tm?.transitions || [];
 

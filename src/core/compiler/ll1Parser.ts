@@ -259,5 +259,19 @@ export function simulateLL1(
     }
   }
 
+  const last = steps[steps.length - 1];
+  if (last && last.status !== 'ACCEPT' && last.status !== 'ERROR') {
+    steps.push({
+      step: steps.length,
+      stackState: [...stack],
+      remainingInput: inputTokens.slice(inputIndex),
+      inputIndex,
+      topOfStack: stack[stack.length - 1] ?? END_MARKER,
+      currentLookahead: inputTokens[inputIndex] ?? END_MARKER,
+      actionTaken: `Step limit (${maxSteps}) exceeded. The grammar is likely left-recursive or has LL(1) conflicts.`,
+      status: 'ERROR',
+    });
+  }
+
   return steps;
 }

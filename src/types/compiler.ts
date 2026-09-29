@@ -49,7 +49,18 @@ export interface BinaryExpressionNode extends BaseASTNode {
   right: ASTNode;
 }
 
-export type ASTNode = ProgramNode | NumericLiteralNode | IdentifierNode | BinaryExpressionNode;
+export interface UnaryExpressionNode extends BaseASTNode {
+  type: 'UnaryExpression';
+  operator: string;
+  argument: ASTNode;
+}
+
+export type ASTNode =
+  | ProgramNode
+  | NumericLiteralNode
+  | IdentifierNode
+  | BinaryExpressionNode
+  | UnaryExpressionNode;
 
 export interface TACInstruction {
   op: string;

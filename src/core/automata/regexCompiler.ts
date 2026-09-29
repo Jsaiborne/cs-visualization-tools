@@ -1,6 +1,8 @@
 import type { NFAConfig, StateNode, TransitionEdge } from '../../types/automata';
 
-export const EPSILON = 'ε';
+import { EPSILON } from '../epsilon';
+
+const POSTFIX_OPERATORS = new Set(['*', '+', '?']);
 
 export interface NFAFragment {
   start: StateNode;
@@ -22,7 +24,7 @@ export function insertExplicitConcat(regex: string): string {
       const c2 = regex[i + 1];
       // Insert '.' if c1 can end an expression and c2 can start an expression
       const c1CanEnd = c1 !== '(' && c1 !== '|';
-      const c2CanStart = c2 !== ')' && c2 !== '|' && c2 !== '*';
+      const c2CanStart = c2 !== ')' && c2 !== '|' && !POSTFIX_OPERATORS.has(c2);
       if (c1CanEnd && c2CanStart) {
         output += '.';
       }
@@ -41,6 +43,8 @@ export function infixToPostfix(infix: string): string[] {
 
   const precedence: Record<string, number> = {
     '*': 3,
+    '+': 3,
+    '?': 3,
     '.': 2,
     '|': 1,
   };
@@ -54,10 +58,11 @@ export function infixToPostfix(infix: string): string[] {
       while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
         output.push(operatorStack.pop()!);
       }
-      if (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] === '(') {
-        operatorStack.pop();
+      if (operatorStack.length === 0) {
+        throw new Error(`Unbalanced parentheses: unexpected ')' at position ${i}.`);
       }
-    } else if (char === '*' || char === '.' || char === '|') {
+      operatorStack.pop();
+    } else if (char in precedence) {
       while (
         operatorStack.length > 0 &&
         operatorStack[operatorStack.length - 1] !== '(' &&
@@ -73,7 +78,11 @@ export function infixToPostfix(infix: string): string[] {
   }
 
   while (operatorStack.length > 0) {
-    output.push(operatorStack.pop()!);
+    const op = operatorStack.pop()!;
+    if (op === '(') {
+      throw new Error("Unbalanced parentheses: missing ')'.");
+    }
+    output.push(op);
   }
 
   return output;
@@ -107,29 +116,41 @@ export function buildThompsonNFA(postfix: string[]): NFAFragment {
 
   const stack: NFAFragment[] = [];
 
+  const popOperand = (op: string): NFAFragment => {
+    const frag = stack.pop();
+    if (!frag) {
+      throw new Error(`Invalid regex: operator '${op}' is missing an operand.`);
+    }
+    return frag;
+  };
+
   for (const token of postfix) {
-    if (token === '*') {
-      // Kleene Star
-      if (stack.length < 1) continue;
-      const frag = stack.pop()!;
+    if (POSTFIX_OPERATORS.has(token)) {
+      // Kleene Star (*), One-or-more (+), Optional (?)
+      const frag = popOperand(token);
       const start = createState();
       const accept = createState();
 
       const transitions: TransitionEdge[] = [
         ...frag.transitions,
         createEdge(start.id, frag.start.id, EPSILON),
-        createEdge(start.id, accept.id, EPSILON),
-        createEdge(frag.accept.id, frag.start.id, EPSILON),
         createEdge(frag.accept.id, accept.id, EPSILON),
       ];
+      if (token !== '+') {
+        // Bypass edge: zero occurrences allowed
+        transitions.push(createEdge(start.id, accept.id, EPSILON));
+      }
+      if (token !== '?') {
+        // Loop-back edge: repeat the fragment
+        transitions.push(createEdge(frag.accept.id, frag.start.id, EPSILON));
+      }
 
       const states = [start, ...frag.states, accept];
       stack.push({ start, accept, states, transitions });
     } else if (token === '|') {
       // Union / Choice
-      if (stack.length < 2) continue;
-      const frag2 = stack.pop()!;
-      const frag1 = stack.pop()!;
+      const frag2 = popOperand(token);
+      const frag1 = popOperand(token);
       const start = createState();
       const accept = createState();
 
@@ -146,9 +167,8 @@ export function buildThompsonNFA(postfix: string[]): NFAFragment {
       stack.push({ start, accept, states, transitions });
     } else if (token === '.') {
       // Concatenation
-      if (stack.length < 2) continue;
-      const frag2 = stack.pop()!;
-      const frag1 = stack.pop()!;
+      const frag2 = popOperand(token);
+      const frag1 = popOperand(token);
 
       // Connect frag1.accept -> frag2.start via epsilon transition
       const transitions: TransitionEdge[] = [
@@ -179,10 +199,8 @@ export function buildThompsonNFA(postfix: string[]): NFAFragment {
     }
   }
 
-  if (stack.length === 0) {
-    const start = createState();
-    const accept = createState();
-    return { start, accept, states: [start, accept], transitions: [] };
+  if (stack.length !== 1) {
+    throw new Error('Invalid regex: expression is empty or has an empty group.');
   }
 
   return stack[0];
@@ -226,7 +244,7 @@ export function layoutNFA(
  * Pure compiler function: Regex String -> Strongly-typed NFAConfig with Auto-Layout.
  *
  * Supports operators:
- * - Kleene Star (*)
+ * - Kleene Star (*), One-or-more (+), Optional (?)
  * - Union / Disjunction (|)
  * - Concatenation (implicit or explicit .)
  * - Parentheses grouping ()

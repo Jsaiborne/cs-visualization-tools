@@ -39,5 +39,5 @@ export interface LL1ExecutionStep {
   };
 }
 
-export const EPSILON = 'ε';
+export { EPSILON } from '../core/epsilon';
 export const END_MARKER = '$';

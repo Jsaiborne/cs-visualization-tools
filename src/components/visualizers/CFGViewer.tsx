@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Zap,
 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGrammarStore, PRESET_GRAMMARS } from '../../store/useGrammarStore';
 import { END_MARKER } from '../../types/cfg';
 
@@ -25,7 +26,22 @@ export const CFGViewer: React.FC = () => {
     setGrammarText,
     setTestInput,
     loadPreset,
-  } = useGrammarStore();
+  } = useGrammarStore(
+    useShallow((state) => ({
+      grammarText: state.grammarText,
+      testInput: state.testInput,
+      grammar: state.grammar,
+      firstSets: state.firstSets,
+      followSets: state.followSets,
+      ll1Table: state.ll1Table,
+      executionSteps: state.executionSteps,
+      currentStepIndex: state.currentStepIndex,
+      parseError: state.parseError,
+      setGrammarText: state.setGrammarText,
+      setTestInput: state.setTestInput,
+      loadPreset: state.loadPreset,
+    }))
+  );
 
   const currentStep = executionSteps[currentStepIndex] || null;
 

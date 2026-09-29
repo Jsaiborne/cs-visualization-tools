@@ -85,25 +85,28 @@ export const Header: React.FC = () => {
 
   const totalSteps = executionSteps.length;
 
-  // Auto-play timer effect for simulation playback
+  // Auto-play: advance one step per tick; the effect re-arms after every step
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        if (currentStepIndex < totalSteps - 1) {
-          stepForward();
-        } else {
-          setIsPlaying(false);
-        }
-      }, playbackSpeedMs);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    if (!isPlaying) return;
+    const timer = setTimeout(() => {
+      if (currentStepIndex < totalSteps - 1) {
+        stepForward();
+      } else {
+        setIsPlaying(false);
+      }
+    }, playbackSpeedMs);
+    return () => clearTimeout(timer);
   }, [isPlaying, currentStepIndex, totalSteps, playbackSpeedMs, stepForward, setIsPlaying]);
 
-  const handleShare = () => {
-    const url = getShareableURL();
+  // Only the active module's store is driven by the timer, so pause everything on switch
+  useEffect(() => {
+    useAutomataStore.getState().setIsPlaying(false);
+    useGrammarStore.getState().setIsPlaying(false);
+    useScopeStore.getState().setIsPlaying(false);
+  }, [activeModule]);
+
+  const handleShare = async () => {
+    const url = await getShareableURL();
     window.history.replaceState(null, '', url);
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(() => {

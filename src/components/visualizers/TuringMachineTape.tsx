@@ -1,10 +1,21 @@
 import React from 'react';
 import { ArrowDown, Cpu } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import type { TMConfig } from '../../types/automata';
 
 export const TuringMachineTape: React.FC = () => {
-  const { automaton, executionSteps, currentStepIndex } = useAutomataStore();
+  const {
+    automaton,
+    executionSteps,
+    currentStepIndex,
+  } = useAutomataStore(
+    useShallow((state) => ({
+      automaton: state.automaton,
+      executionSteps: state.executionSteps,
+      currentStepIndex: state.currentStepIndex,
+    }))
+  );
   const tm = automaton.type === 'TM' ? (automaton as TMConfig) : null;
   const blankSymbol = tm?.blankSymbol || 'B';
 
