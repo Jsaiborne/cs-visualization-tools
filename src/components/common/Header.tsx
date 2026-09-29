@@ -14,12 +14,14 @@ import {
   CheckCircle2,
   Library,
   Keyboard,
+  Layers,
 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useUIStore, type ActiveModule } from '../../store/useUIStore';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import { useGrammarStore } from '../../store/useGrammarStore';
 import { useScopeStore } from '../../store/useScopeStore';
+import { useLRStore } from '../../store/useLRStore';
 import { getShareableURL } from '../../utils/urlState';
 
 const LibraryPanel = lazy(() => import('./LibraryPanel'));
@@ -39,7 +41,7 @@ export const Header: React.FC = () => {
     isPlaying: state.isPlaying,
     setIsPlaying: state.setIsPlaying,
     currentStepIndex: state.currentStepIndex,
-    executionSteps: state.executionSteps,
+    totalSteps: state.executionSteps.length,
     stepForward: state.stepForward,
     stepBackward: state.stepBackward,
     reset: state.reset,
@@ -51,7 +53,7 @@ export const Header: React.FC = () => {
     isPlaying: state.isPlaying,
     setIsPlaying: state.setIsPlaying,
     currentStepIndex: state.currentStepIndex,
-    executionSteps: state.executionSteps,
+    totalSteps: state.executionSteps.length,
     stepForward: state.stepForward,
     stepBackward: state.stepBackward,
     reset: state.reset,
@@ -63,7 +65,7 @@ export const Header: React.FC = () => {
     isPlaying: state.isPlaying,
     setIsPlaying: state.setIsPlaying,
     currentStepIndex: state.currentStepIndex,
-    scopeSteps: state.scopeSteps,
+    totalSteps: state.scopeSteps.length,
     stepForward: state.stepForward,
     stepBackward: state.stepBackward,
     reset: state.reset,
@@ -71,28 +73,38 @@ export const Header: React.FC = () => {
     hasValidationErrors: !!state.parseError
   })));
 
-  const isGrammarMode = activeModule === 'GRAMMAR';
+  const lrStore = useLRStore(useShallow(state => ({
+    isPlaying: state.isPlaying,
+    setIsPlaying: state.setIsPlaying,
+    currentStepIndex: state.currentStepIndex,
+    totalSteps: state.simulation.steps.length,
+    stepForward: state.stepForward,
+    stepBackward: state.stepBackward,
+    reset: state.reset,
+    playbackSpeedMs: state.playbackSpeedMs,
+    hasValidationErrors: !!state.parseError
+  })));
+
   const isScopeMode = activeModule === 'COMPILER_AST';
   // In the compiler module only the Symbol Table tab is step-based; tokens/AST/TAC are static views
   const hasPlayback = activeModule !== 'HOME' && (!isScopeMode || compilerTab === 'SYMBOL_TABLE');
 
-  const activeStore = isGrammarMode
-    ? grammarStore
-    : isScopeMode
-    ? scopeStore
+  const activeStore =
+    activeModule === 'GRAMMAR' ? grammarStore
+    : activeModule === 'LR' ? lrStore
+    : isScopeMode ? scopeStore
     : automataStore;
 
   const isPlaying = activeStore.isPlaying;
   const setIsPlaying = activeStore.setIsPlaying;
   const currentStepIndex = activeStore.currentStepIndex;
-  const executionSteps = 'scopeSteps' in activeStore ? activeStore.scopeSteps : activeStore.executionSteps;
   const stepForward = activeStore.stepForward;
   const stepBackward = activeStore.stepBackward;
   const reset = activeStore.reset;
   const playbackSpeedMs = activeStore.playbackSpeedMs;
   const hasValidationErrors = activeStore.hasValidationErrors;
 
-  const totalSteps = executionSteps.length;
+  const totalSteps = activeStore.totalSteps;
 
   // Auto-play: advance one step per tick; the effect re-arms after every step
   useEffect(() => {
@@ -112,6 +124,7 @@ export const Header: React.FC = () => {
     useAutomataStore.getState().setIsPlaying(false);
     useGrammarStore.getState().setIsPlaying(false);
     useScopeStore.getState().setIsPlaying(false);
+    useLRStore.getState().setIsPlaying(false);
   }, [activeModule, compilerTab]);
 
   const handleShare = async () => {
@@ -129,11 +142,12 @@ export const Header: React.FC = () => {
   };
 
   const modules: { id: ActiveModule; label: string; icon: React.ReactNode }[] = [
-    { id: 'HOME', label: 'Home Hub', icon: <Home size={18} /> },
-    { id: 'AUTOMATA', label: 'Finite Automata & TM', icon: <Network size={18} /> },
-    { id: 'REGEX', label: 'Regex & Thompson', icon: <Binary size={18} /> },
-    { id: 'GRAMMAR', label: 'CFG & Parsing', icon: <Cpu size={18} /> },
-    { id: 'COMPILER_AST', label: 'Compiler AST & IR', icon: <Code2 size={18} /> },
+    { id: 'HOME', label: 'Home', icon: <Home size={18} /> },
+    { id: 'AUTOMATA', label: 'Automata & TM', icon: <Network size={18} /> },
+    { id: 'REGEX', label: 'Regex', icon: <Binary size={18} /> },
+    { id: 'GRAMMAR', label: 'LL(1) Parsing', icon: <Cpu size={18} /> },
+    { id: 'LR', label: 'LR Parsing', icon: <Layers size={18} /> },
+    { id: 'COMPILER_AST', label: 'Compiler', icon: <Code2 size={18} /> },
   ];
 
   return (
@@ -180,6 +194,7 @@ export const Header: React.FC = () => {
       <div
         style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
         onClick={() => setActiveModule('HOME')}
+        title="TOC & Compiler Suite: home"
       >
         <div
           style={{
@@ -195,14 +210,14 @@ export const Header: React.FC = () => {
         >
           <Cpu size={22} color="#ffffff" />
         </div>
-        <div>
+        <div className="header-wide-only">
           <h1
             style={{ fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}
             className="gradient-text"
           >
             TOC & Compiler Suite
           </h1>
-          <p className="header-wide-only" style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
             Interactive Theory of Computation Platform
           </p>
         </div>

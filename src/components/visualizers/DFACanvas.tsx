@@ -298,7 +298,7 @@ const DFACanvasInner: React.FC = () => {
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '8px',
-            fill: '#f8fafc',
+            overflow: 'hidden',
           }}
         />
         <MiniMap

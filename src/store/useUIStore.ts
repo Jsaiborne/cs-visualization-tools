@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ActiveModule = 'HOME' | 'AUTOMATA' | 'REGEX' | 'GRAMMAR' | 'COMPILER_AST';
+export type ActiveModule = 'HOME' | 'AUTOMATA' | 'REGEX' | 'GRAMMAR' | 'LR' | 'COMPILER_AST';
 export type CompilerTab = 'TOKENS' | 'AST' | 'TAC' | 'SYMBOL_TABLE';
 
 interface UIState {

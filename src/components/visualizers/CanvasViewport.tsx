@@ -11,6 +11,7 @@ const CompilerEditor = lazy(() => import('./CompilerEditor'));
 const TuringMachineView = lazy(() => import('./TuringMachineView'));
 const RegexPanel = lazy(() => import('./RegexPanel'));
 const CFGViewer = lazy(() => import('./CFGViewer'));
+const LRViewer = lazy(() => import('./LRViewer'));
 const ToolkitActions = lazy(() => import('./ToolkitActions'));
 const ConstructionPanel = lazy(() => import('./ConstructionPanel'));
 
@@ -143,6 +144,8 @@ export const CanvasViewport: React.FC = () => {
         </div>
       ) : activeModule === 'GRAMMAR' ? (
         <CFGViewer />
+      ) : activeModule === 'LR' ? (
+        <LRViewer />
       ) : activeModule === 'COMPILER_AST' ? (
         <CompilerEditor />
       ) : (

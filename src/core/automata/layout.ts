@@ -1,17 +1,22 @@
 import dagre from '@dagrejs/dagre';
-import type { StateNode } from '../../types/automata';
 
 /**
  * Deterministic left-to-right auto-layout (dagre) for generated machines: regex NFAs,
- * subset-construction DFAs, minimized DFAs. Returns the states with x/y filled in.
+ * subset-construction DFAs, minimized DFAs, LR item-set automata. Returns the states with x/y
+ * filled in (dagre gives box centers).
  */
-export function layoutStates(states: StateNode[], transitions: { from: string; to: string }[]): StateNode[] {
+export function layoutStates<T extends { id: string }>(
+  states: T[],
+  transitions: { from: string; to: string }[],
+  /** Node box size; defaults to the 72px automaton circle */
+  sizeOf: (state: T) => { width: number; height: number } = () => ({ width: 72, height: 72 })
+): (T & { x: number; y: number })[] {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: 'LR', nodesep: 70, ranksep: 120, marginx: 80, marginy: 80 });
   g.setDefaultEdgeLabel(() => ({}));
 
   states.forEach((state) => {
-    g.setNode(state.id, { width: 72, height: 72 });
+    g.setNode(state.id, sizeOf(state));
   });
 
   transitions.forEach((trans) => {

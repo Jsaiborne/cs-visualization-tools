@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Zap,
   Share2,
+  Layers,
 } from 'lucide-react';
 import { useUIStore, type ActiveModule, type CompilerTab } from '../../store/useUIStore';
 
@@ -53,10 +54,20 @@ export const LandingPage: React.FC = () => {
       title: 'Context-Free Grammars & LL(1) Parsing',
       tag: 'Syntax Analysis',
       description:
-        'Text-based CFG rule editor, automatic FIRST/FOLLOW fixpoint set solver, 2D LL(1) parse table generator with conflict detection, and animated Pushdown Stack simulator.',
+        'CFG editor with FIRST/FOLLOW sets, LL(1) table with conflict detection, left-recursion removal and left factoring, and a parse tree that grows as the stack machine runs.',
       icon: <Cpu size={28} />,
       color: 'var(--accent-pink)',
       bgGradient: 'radial-gradient(circle at top right, rgba(236, 72, 153, 0.15), transparent 70%)',
+    },
+    {
+      id: 'LR',
+      title: 'LR Parsing: LR(0), SLR, LALR, LR(1)',
+      tag: 'Bottom-Up Parsing',
+      description:
+        'Canonical item-set automaton, ACTION/GOTO tables for four methods side by side with their conflicts, and a shift-reduce parse that builds the tree bottom-up.',
+      icon: <Layers size={28} />,
+      color: 'var(--accent-blue)',
+      bgGradient: 'radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), transparent 70%)',
     },
     {
       id: 'COMPILER_AST',

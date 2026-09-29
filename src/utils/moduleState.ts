@@ -3,14 +3,16 @@ import { useAutomataStore } from '../store/useAutomataStore';
 import { useGrammarStore } from '../store/useGrammarStore';
 import { useCompilerStore } from '../store/useCompilerStore';
 import { useScopeStore } from '../store/useScopeStore';
+import { useLRStore, LR_KINDS } from '../store/useLRStore';
 
-export const ACTIVE_MODULES: ActiveModule[] = ['HOME', 'AUTOMATA', 'REGEX', 'GRAMMAR', 'COMPILER_AST'];
+export const ACTIVE_MODULES: ActiveModule[] = ['HOME', 'AUTOMATA', 'REGEX', 'GRAMMAR', 'LR', 'COMPILER_AST'];
 
 export const MODULE_LABELS: Record<ActiveModule, string> = {
   HOME: 'Home',
   AUTOMATA: 'Finite Automata & TM',
   REGEX: 'Regex & Thompson',
   GRAMMAR: 'CFG & LL(1) Parsing',
+  LR: 'LR Parsing',
   COMPILER_AST: 'Compiler AST & IR',
 };
 
@@ -34,6 +36,10 @@ export function captureModuleState(module: ActiveModule): Record<string, unknown
     case 'GRAMMAR': {
       const { grammarText, testInput } = useGrammarStore.getState();
       return { grammarText, testInput };
+    }
+    case 'LR': {
+      const { grammarText, testInput, kind } = useLRStore.getState();
+      return { grammarText, testInput, kind };
     }
     case 'COMPILER_AST': {
       const { sourceCode } = useCompilerStore.getState();
@@ -73,6 +79,15 @@ export function applyModuleState(module: ActiveModule, data: any): boolean {
         if (typeof data.testInput === 'string') {
           useGrammarStore.getState().setTestInput(data.testInput);
         }
+        applied = true;
+      }
+      break;
+    case 'LR':
+      if (typeof data.grammarText === 'string') {
+        const lr = useLRStore.getState();
+        if (LR_KINDS.includes(data.kind)) lr.setKind(data.kind);
+        lr.setGrammarText(data.grammarText);
+        if (typeof data.testInput === 'string') useLRStore.getState().setTestInput(data.testInput);
         applied = true;
       }
       break;

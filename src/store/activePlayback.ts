@@ -2,6 +2,7 @@ import type { ActiveModule, CompilerTab } from './useUIStore';
 import { useAutomataStore } from './useAutomataStore';
 import { useGrammarStore } from './useGrammarStore';
 import { useScopeStore } from './useScopeStore';
+import { useLRStore } from './useLRStore';
 import type { PlaybackState } from './playback';
 
 export interface ActivePlayback {
@@ -23,6 +24,10 @@ export function getActivePlayback(module: ActiveModule, compilerTab: CompilerTab
     case 'GRAMMAR': {
       const state = useGrammarStore.getState();
       return { state, stepCount: state.executionSteps.length };
+    }
+    case 'LR': {
+      const state = useLRStore.getState();
+      return { state, stepCount: state.simulation.steps.length };
     }
     case 'COMPILER_AST': {
       if (compilerTab !== 'SYMBOL_TABLE') return null;
