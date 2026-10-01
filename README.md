@@ -1,5 +1,7 @@
 # cs-visualization-tools
 
+**Live site:** https://jsaiborne.github.io/cs-visualization-tools/
+
 An interactive, browser-only suite for exploring theory of computation and compiler construction. Every module turns a computation into a list of step snapshots that you can play, pause, and step through forwards and backwards.
 
 ## Modules
@@ -28,6 +30,8 @@ npm test          # run the Vitest suite once
 npm run lint      # oxlint
 npm run build     # type-check and build for production
 ```
+
+Pushing to `main` deploys the site: the GitHub Actions workflow in `.github/workflows/deploy.yml` runs the tests, builds with the `/<repo>/` base path, and publishes `dist` to GitHub Pages.
 
 ## Project layout
 
