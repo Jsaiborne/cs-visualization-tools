@@ -104,8 +104,8 @@ export const ParseTreeView: React.FC<ParseTreeViewProps> = ({
       .enter()
       .append('path')
       .attr('d', (l) => `M${x(l.source)},${y(l.source) + 14} C${x(l.source)},${(y(l.source) + y(l.target)) / 2} ${x(l.target)},${(y(l.source) + y(l.target)) / 2} ${x(l.target)},${y(l.target) - 14}`)
-      .attr('fill', 'none')
-      .attr('stroke', '#475569')
+      .style('fill', 'none')
+      .style('stroke', 'var(--border-strong)')
       .attr('stroke-width', 1.5);
 
     const groups = layer
@@ -124,10 +124,10 @@ export const ParseTreeView: React.FC<ParseTreeViewProps> = ({
       const isDone = node.doneAtStep !== undefined && node.doneAtStep <= step;
       const palette =
         node.kind === 'nonterminal'
-          ? { fill: 'rgba(168, 85, 247, 0.18)', stroke: '#a855f7', text: '#e9d5ff' }
+          ? { fill: 'var(--surface)', stroke: 'var(--border-strong)', text: 'var(--cat-2)' }
           : node.kind === 'terminal'
-            ? { fill: isDone ? 'rgba(16, 185, 129, 0.22)' : 'rgba(15, 23, 42, 0.9)', stroke: '#10b981', text: '#d1fae5' }
-            : { fill: 'rgba(15, 23, 42, 0.9)', stroke: '#64748b', text: '#94a3b8' };
+            ? { fill: isDone ? 'var(--surface-3)' : 'var(--surface)', stroke: 'var(--border-strong)', text: 'var(--text)' }
+            : { fill: 'var(--surface)', stroke: 'var(--border)', text: 'var(--text-muted)' };
 
       g.append('rect')
         .attr('x', -width / 2)
@@ -135,19 +135,18 @@ export const ParseTreeView: React.FC<ParseTreeViewProps> = ({
         .attr('width', width)
         .attr('height', 28)
         .attr('rx', node.kind === 'nonterminal' ? 14 : 6)
-        .attr('fill', palette.fill)
-        .attr('stroke', isActive ? '#f59e0b' : palette.stroke)
-        .attr('stroke-width', isActive ? 3 : 1.5)
-        .attr('stroke-dasharray', node.kind === 'terminal' && !isDone ? '4 3' : null)
-        .attr('filter', isActive ? 'drop-shadow(0 0 8px #f59e0b)' : null);
+        .style('fill', palette.fill)
+        .style('stroke', isActive ? 'var(--accent)' : palette.stroke)
+        .attr('stroke-width', isActive ? 2 : 1.25)
+        .attr('stroke-dasharray', node.kind === 'terminal' && !isDone ? '4 3' : null);
 
       g.append('text')
         .attr('text-anchor', 'middle')
         .attr('dy', '0.35em')
-        .attr('fill', palette.text)
-        .attr('font-family', 'var(--font-mono)')
+        .style('fill', palette.text)
+        .style('font-family', 'var(--font-mono)')
         .attr('font-size', '13px')
-        .attr('font-weight', 700)
+        .attr('font-weight', 600)
         .attr('font-style', node.kind === 'epsilon' ? 'italic' : null)
         .text(node.symbol);
     });
@@ -155,9 +154,9 @@ export const ParseTreeView: React.FC<ParseTreeViewProps> = ({
 
   return (
     <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
-          <GitBranch size={15} color="var(--accent-purple)" /> {title}
+          <GitBranch size={15} color="var(--text-muted)" /> {title}
         </div>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button
@@ -182,10 +181,10 @@ export const ParseTreeView: React.FC<ParseTreeViewProps> = ({
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', gap: '14px', padding: '6px 12px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-muted)' }}>
-        <span><span style={{ color: '#a855f7' }}>●</span> nonterminal</span>
-        <span><span style={{ color: '#10b981' }}>●</span> terminal (dashed until matched)</span>
-        <span><span style={{ color: '#f59e0b' }}>●</span> current step</span>
+      <div style={{ display: 'flex', gap: '14px', padding: '6px 12px', borderTop: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)' }}>
+        <span><span style={{ color: 'var(--cat-2)' }}>A</span> nonterminal</span>
+        <span>terminal (dashed until matched)</span>
+        <span><span style={{ color: 'var(--accent)' }}>■</span> current step</span>
       </div>
     </div>
   );

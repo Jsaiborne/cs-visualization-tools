@@ -7,7 +7,7 @@ import { DEAD_STATE_ID, DEAD_STATE_LABEL } from '../../core/automata/subsetConst
 
 const cell: React.CSSProperties = {
   padding: '5px 8px',
-  borderBottom: '1px solid var(--border-subtle)',
+  borderBottom: '1px solid var(--border)',
   fontFamily: 'var(--font-mono)',
   fontSize: '11px',
   whiteSpace: 'nowrap',
@@ -24,7 +24,7 @@ const Stepper: React.FC<{ step: number; min: number; max: number; label: string;
     <button className="btn-secondary" onClick={() => onChange(step - 1)} disabled={step <= min} aria-label="Previous step" style={{ padding: '4px 6px', opacity: step <= min ? 0.4 : 1 }}>
       <ChevronLeft size={14} />
     </button>
-    <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)', minWidth: '96px', textAlign: 'center' }}>
+    <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--accent)', minWidth: '96px', textAlign: 'center' }}>
       {label}
     </span>
     <button className="btn-secondary" onClick={() => onChange(step + 1)} disabled={step >= max} aria-label="Next step" style={{ padding: '4px 6px', opacity: step >= max ? 0.4 : 1 }}>
@@ -46,15 +46,15 @@ const SubsetView: React.FC<{ construction: Extract<Construction, { kind: 'subset
   return (
     <>
       <Stepper step={step} min={1} max={result.steps.length} label={`Row ${step} / ${result.steps.length}`} onChange={setStep} />
-      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>
         {current?.description}
         {step >= result.steps.length &&
           ` Done: ${result.dfa.states.length} DFA states${result.stateSets[DEAD_STATE_ID] ? ` (including the trap state ${DEAD_STATE_LABEL})` : ''}.`}
       </p>
-      <div style={{ overflow: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}>
+      <div style={{ overflow: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>
-            <tr style={{ background: 'rgba(30, 41, 59, 0.6)', color: 'var(--text-secondary)' }}>
+            <tr style={{ background: 'var(--surface-3)', color: 'var(--text-muted)' }}>
               <th style={{ ...cell, textAlign: 'left' }}>DFA state</th>
               <th style={{ ...cell, textAlign: 'left' }}>= ε-closure of</th>
               {alphabet.map((a) => (
@@ -66,17 +66,17 @@ const SubsetView: React.FC<{ construction: Extract<Construction, { kind: 'subset
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.dfaStateId} style={{ background: row === current ? 'rgba(245, 158, 11, 0.12)' : undefined }}>
-                <td style={{ ...cell, color: 'var(--accent-blue)', fontWeight: 700 }}>
+              <tr key={row.dfaStateId} style={{ background: row === current ? 'var(--warning-subtle)' : undefined }}>
+                <td style={{ ...cell, color: 'var(--accent)', fontWeight: 700 }}>
                   {row.dfaStateId}
                   {result.dfa.acceptStateIds.includes(row.dfaStateId) && ' ✓'}
                 </td>
-                <td style={{ ...cell, color: 'var(--text-secondary)', whiteSpace: 'normal', overflowWrap: 'anywhere', minWidth: '110px' }}>
+                <td style={{ ...cell, color: 'var(--text-muted)', whiteSpace: 'normal', overflowWrap: 'anywhere', minWidth: '110px' }}>
                   {/* Break after commas so long sets wrap instead of widening the table */}
                   {result.setLabels[row.dfaStateId].replaceAll(',', ',​')}
                 </td>
                 {row.moves.map((m) => (
-                  <td key={m.symbol} style={{ ...cell, textAlign: 'center', color: m.isNew ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
+                  <td key={m.symbol} style={{ ...cell, textAlign: 'center', color: m.isNew ? 'var(--warning)' : 'var(--text)' }}>
                     {m.targetDfaStateId === DEAD_STATE_ID ? DEAD_STATE_LABEL : m.targetDfaStateId}
                     {m.isNew && <sup style={{ marginLeft: '2px' }}>new</sup>}
                   </td>
@@ -108,11 +108,11 @@ const MinimizeView: React.FC<{ construction: Extract<Construction, { kind: 'mini
     <>
       <Stepper step={step} min={0} max={result.rounds.length - 1} label={`Round ${step} / ${result.rounds.length - 1}`} onChange={setStep} />
       {result.unreachable.length > 0 && (
-        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>
           Removed unreachable: {result.unreachable.map(label).join(', ')}
         </p>
       )}
-      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>{round.description}</p>
+      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.45 }}>{round.description}</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
         {round.blocks.map((block, i) => (
           <span
@@ -123,7 +123,7 @@ const MinimizeView: React.FC<{ construction: Extract<Construction, { kind: 'mini
               fontFamily: 'var(--font-mono)',
               fontSize: '12px',
               border: `2px solid ${BLOCK_COLORS[i % BLOCK_COLORS.length]}`,
-              background: 'rgba(15, 23, 42, 0.8)',
+              background: 'var(--surface)',
             }}
           >
             {`{${block.map(label).join(', ')}}`}
@@ -131,13 +131,13 @@ const MinimizeView: React.FC<{ construction: Extract<Construction, { kind: 'mini
         ))}
       </div>
       {isLast && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
           <p style={{ margin: 0, fontSize: '12px' }}>
             No block splits any further: the minimal DFA has <strong>{result.dfa.states.length}</strong> state
             {result.dfa.states.length === 1 ? '' : 's'} (from {sourceCount}).
           </p>
           {applied ? (
-            <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent-emerald)' }}>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--success)' }}>
               <Check size={13} style={{ verticalAlign: 'middle' }} /> Loaded. Press Ctrl/⌘+Z to go back to the original.
             </p>
           ) : (
@@ -180,7 +180,7 @@ export const ConstructionPanel: React.FC = () => {
 
   return (
     <aside
-      className="glass-panel"
+      className="panel"
       aria-label={construction.kind === 'subset' ? 'Subset construction' : 'DFA minimization'}
       style={{
         width: '380px',
@@ -195,11 +195,11 @@ export const ConstructionPanel: React.FC = () => {
         flexDirection: 'column',
         gap: '10px',
         overflowY: 'auto',
-        background: 'rgba(15, 23, 42, 0.96)',
+        background: 'var(--surface)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>
+        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
           {construction.kind === 'subset' ? 'Subset construction (NFA → DFA)' : 'DFA minimization'}
         </h3>
         <button className="btn-secondary" onClick={() => setConstruction(null)} aria-label="Close panel" style={{ padding: '4px 6px' }}>

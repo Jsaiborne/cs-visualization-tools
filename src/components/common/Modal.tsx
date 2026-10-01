@@ -10,7 +10,7 @@ interface ModalProps {
 }
 
 /**
- * Centered glass dialog over a dimmed backdrop. Closes on Escape or a backdrop click.
+ * Centered dialog over a dimmed backdrop. Closes on Escape or a backdrop click.
  * Rendered into document.body so ancestors' stacking contexts (z-index) can't trap it.
  */
 export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, children }) => {
@@ -33,8 +33,7 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, child
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(9, 13, 22, 0.75)',
-        backdropFilter: 'blur(6px)',
+        background: 'var(--overlay)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -45,14 +44,14 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, child
       <div
         role="dialog"
         aria-modal="true"
-        className="glass-panel"
+        className="panel"
         style={{
           width: `min(${width}px, 100%)`,
           maxHeight: 'calc(100vh - 32px)',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: 'var(--shadow-glass)',
-          background: 'rgba(15, 23, 42, 0.97)',
+          background: 'var(--surface)',
+          boxShadow: 'var(--shadow-popover)',
         }}
       >
         <div
@@ -60,13 +59,13 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, child
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '14px 18px',
-            borderBottom: '1px solid var(--border-subtle)',
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--border)',
           }}
         >
-          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>{title}</h3>
           <button
-            className="btn-secondary"
+            className="btn-ghost"
             onClick={onClose}
             aria-label="Close"
             style={{ padding: '4px 6px' }}
@@ -74,7 +73,7 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, width = 520, child
             <X size={15} />
           </button>
         </div>
-        <div style={{ padding: '16px 18px', overflowY: 'auto' }}>{children}</div>
+        <div style={{ padding: '16px', overflowY: 'auto' }}>{children}</div>
       </div>
     </div>,
     document.body

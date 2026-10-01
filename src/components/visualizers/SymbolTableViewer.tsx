@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
+import { MONACO_THEME, defineMonacoTheme } from '../../utils/monacoTheme';
 import {
   Code2,
   Sparkles,
@@ -102,7 +103,7 @@ export const SymbolTableViewer: React.FC = () => {
         display: 'flex',
         width: '100%',
         height: '100%',
-        background: 'var(--bg-dark)',
+        background: 'var(--bg)',
         overflow: 'hidden',
       }}
     >
@@ -113,8 +114,8 @@ export const SymbolTableViewer: React.FC = () => {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          borderRight: '1px solid var(--border-subtle)',
-          background: 'rgba(9, 13, 22, 0.95)',
+          borderRight: '1px solid var(--border)',
+          background: 'var(--bg)',
         }}
       >
         {/* Editor Toolbar */}
@@ -125,20 +126,20 @@ export const SymbolTableViewer: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(15, 23, 42, 0.8)',
-            borderBottom: '1px solid var(--border-subtle)',
+            background: 'var(--surface)',
+            borderBottom: '1px solid var(--border)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Code2 size={16} color="var(--accent-purple)" />
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <Code2 size={16} color="var(--text-muted)" />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
               Scoped Mini-Language Code
             </span>
           </div>
 
           {/* Quick Presets */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={13} color="var(--accent-blue)" />
+            <Sparkles size={13} color="var(--text-muted)" />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Presets:</span>
             {SCOPE_PRESETS.map((preset) => (
               <button
@@ -148,14 +149,14 @@ export const SymbolTableViewer: React.FC = () => {
                   padding: '3px 8px',
                   fontSize: '11px',
                   borderRadius: '4px',
-                  border: '1px solid var(--border-subtle)',
-                  background: 'rgba(30, 41, 59, 0.5)',
-                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-3)',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
                   transition: 'all 150ms ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent-blue)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
               >
                 {preset.name.split(' ')[0]}
               </button>
@@ -168,14 +169,15 @@ export const SymbolTableViewer: React.FC = () => {
           <Editor
             height="100%"
             defaultLanguage="javascript"
-            theme="vs-dark"
+            theme={MONACO_THEME}
+            beforeMount={defineMonacoTheme}
             value={sourceCode}
             onMount={handleEditorDidMount}
             onChange={(val) => setSourceCode(val ?? '')}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
-              fontFamily: 'JetBrains Mono, monospace',
+              fontFamily: 'var(--font-mono)',
               scrollBeyondLastLine: false,
               automaticLayout: true,
               tabSize: 2,
@@ -193,9 +195,9 @@ export const SymbolTableViewer: React.FC = () => {
           <div
             style={{
               padding: '8px 16px',
-              background: 'rgba(244, 63, 94, 0.15)',
-              borderTop: '1px solid rgba(244, 63, 94, 0.3)',
-              color: 'var(--accent-rose)',
+              background: 'var(--danger-subtle)',
+              borderTop: '1px solid var(--danger-border)',
+              color: 'var(--danger)',
               fontSize: '12px',
               display: 'flex',
               alignItems: 'center',
@@ -213,8 +215,8 @@ export const SymbolTableViewer: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              background: 'rgba(15, 23, 42, 0.9)',
-              borderTop: '1px solid var(--border-subtle)',
+              background: 'var(--surface)',
+              borderTop: '1px solid var(--border)',
               fontSize: '11px',
               color: 'var(--text-muted)',
               fontFamily: 'var(--font-mono)',
@@ -233,7 +235,7 @@ export const SymbolTableViewer: React.FC = () => {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: 'rgba(9, 13, 22, 0.95)',
+          background: 'var(--bg)',
           overflow: 'hidden',
         }}
       >
@@ -245,13 +247,13 @@ export const SymbolTableViewer: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(15, 23, 42, 0.8)',
-            borderBottom: '1px solid var(--border-subtle)',
+            background: 'var(--surface)',
+            borderBottom: '1px solid var(--border)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Layers size={16} color="var(--accent-blue)" />
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <Layers size={16} color="var(--text-muted)" />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
               Symbol Table Scope Stack
             </span>
           </div>
@@ -262,11 +264,11 @@ export const SymbolTableViewer: React.FC = () => {
               style={{
                 fontSize: '11px',
                 fontFamily: 'var(--font-mono)',
-                color: 'var(--accent-blue)',
+                color: 'var(--accent)',
                 padding: '2px 8px',
                 borderRadius: '4px',
-                background: 'rgba(56, 189, 248, 0.1)',
-                border: '1px solid rgba(56, 189, 248, 0.2)',
+                background: 'var(--accent-subtle)',
+                border: '1px solid var(--accent-subtle)',
               }}
             >
               Step {currentStepIndex + 1} / {scopeSteps.length || 1}
@@ -316,33 +318,20 @@ export const SymbolTableViewer: React.FC = () => {
           <div
             style={{
               padding: '12px 16px',
-              background: 'rgba(30, 41, 59, 0.4)',
-              borderBottom: '1px solid var(--border-subtle)',
+              background: 'var(--surface)',
+              borderBottom: '1px solid var(--border)',
               display: 'flex',
               flexDirection: 'column',
               gap: '4px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: currentStep.isError ? 'var(--accent-rose)' : 'var(--accent-purple)',
-                  color: '#ffffff',
-                  letterSpacing: '0.03em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {currentStep.action}
-              </span>
+              <span className={`badge ${currentStep.isError ? 'badge-danger' : 'badge-accent'}`}>{currentStep.action}</span>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                 Line {currentStep.currentLine}
               </span>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
               {currentStep.description}
             </p>
           </div>
@@ -381,18 +370,13 @@ export const SymbolTableViewer: React.FC = () => {
               return (
                 <div
                   key={scope.id}
-                  className="glass-panel"
+                  className="panel"
                   style={{
                     padding: '14px',
-                    borderRadius: '10px',
-                    background: isTopActive
-                      ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(168, 85, 247, 0.15) 100%)'
-                      : 'rgba(15, 23, 42, 0.65)',
-                    border: isTopActive
-                      ? '1px solid var(--accent-purple)'
-                      : '1px solid var(--border-subtle)',
-                    boxShadow: isTopActive ? '0 0 16px rgba(168, 85, 247, 0.25)' : 'none',
-                    transition: 'all 250ms ease',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--surface)',
+                    border: `1px solid ${isTopActive ? 'var(--accent)' : 'var(--border)'}`,
+                    transition: 'border-color 200ms ease',
                     position: 'relative',
                   }}
                 >
@@ -404,19 +388,15 @@ export const SymbolTableViewer: React.FC = () => {
                       justifyContent: 'space-between',
                       marginBottom: '10px',
                       paddingBottom: '8px',
-                      borderBottom: '1px solid var(--border-subtle)',
+                      borderBottom: '1px solid var(--border)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Database
-                        size={15}
-                        color={isTopActive ? 'var(--accent-purple)' : 'var(--accent-blue)'}
-                      />
+                      <Database size={15} color={isTopActive ? 'var(--accent)' : 'var(--text-muted)'} />
                       <span
                         style={{
                           fontSize: '14px',
-                          fontWeight: 700,
-                          color: isTopActive ? '#ffffff' : 'var(--text-primary)',
+                          fontWeight: 600,
                         }}
                       >
                         {scope.name}
@@ -426,7 +406,7 @@ export const SymbolTableViewer: React.FC = () => {
                           fontSize: '10px',
                           color: 'var(--text-muted)',
                           fontFamily: 'var(--font-mono)',
-                          background: 'rgba(30, 41, 59, 0.6)',
+                          background: 'var(--surface-3)',
                           padding: '1px 6px',
                           borderRadius: '4px',
                         }}
@@ -437,36 +417,12 @@ export const SymbolTableViewer: React.FC = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {isTopActive && (
-                        <span
-                          style={{
-                            fontSize: '10px',
-                            fontWeight: 700,
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            background: 'rgba(168, 85, 247, 0.25)',
-                            border: '1px solid var(--accent-purple)',
-                            color: 'var(--accent-purple)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          <ArrowUp size={11} /> TOP / ACTIVE SCOPE
+                        <span className="badge badge-accent">
+                          <ArrowUp size={11} /> Active scope
                         </span>
                       )}
                       {isGlobal && (
-                        <span
-                          style={{
-                            fontSize: '10px',
-                            fontWeight: 600,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            background: 'rgba(56, 189, 248, 0.15)',
-                            color: 'var(--accent-blue)',
-                          }}
-                        >
-                          GLOBAL ROOT
-                        </span>
+                        <span className="badge">Global</span>
                       )}
                     </div>
                   </div>
@@ -499,7 +455,7 @@ export const SymbolTableViewer: React.FC = () => {
                             style={{
                               textAlign: 'left',
                               color: 'var(--text-muted)',
-                              borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                              borderBottom: '1px solid var(--border)',
                               fontSize: '11px',
                             }}
                           >
@@ -517,22 +473,22 @@ export const SymbolTableViewer: React.FC = () => {
                               <tr
                                 key={v.name}
                                 style={{
-                                  background: isTarget ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+                                  background: isTarget ? 'var(--accent-subtle)' : 'transparent',
                                   transition: 'background 200ms ease',
-                                  borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+                                  borderBottom: '1px solid var(--border)',
                                 }}
                               >
-                                <td style={{ padding: '6px 8px', fontWeight: 600, color: 'var(--accent-blue)' }}>
+                                <td style={{ padding: '6px 8px', fontWeight: 600, color: 'var(--accent)' }}>
                                   {v.name}
                                 </td>
-                                <td style={{ padding: '6px 8px', color: 'var(--text-secondary)' }}>
+                                <td style={{ padding: '6px 8px', color: 'var(--text-muted)' }}>
                                   {v.type}
                                 </td>
                                 <td
                                   style={{
                                     padding: '6px 8px',
                                     fontWeight: 700,
-                                    color: isTarget ? 'var(--accent-emerald)' : 'var(--text-primary)',
+                                    color: isTarget ? 'var(--success)' : 'var(--text)',
                                   }}
                                 >
                                   {v.value}
@@ -547,9 +503,9 @@ export const SymbolTableViewer: React.FC = () => {
                                         fontSize: '10px',
                                         padding: '1px 6px',
                                         borderRadius: '3px',
-                                        background: 'rgba(245, 158, 11, 0.15)',
-                                        border: '1px solid rgba(245, 158, 11, 0.3)',
-                                        color: 'var(--accent-amber)',
+                                        background: 'var(--warning-subtle)',
+                                        border: '1px solid var(--warning-border)',
+                                        color: 'var(--warning)',
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '3px',

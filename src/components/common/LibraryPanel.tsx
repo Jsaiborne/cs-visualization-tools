@@ -25,9 +25,9 @@ const inputStyle: React.CSSProperties = {
   padding: '7px 10px',
   fontSize: '13px',
   borderRadius: '6px',
-  border: '1px solid var(--border-subtle)',
-  background: 'var(--bg-input)',
-  color: 'var(--text-primary)',
+  border: '1px solid var(--border)',
+  background: 'var(--bg)',
+  color: 'var(--text)',
   outline: 'none',
 };
 
@@ -102,7 +102,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({ onClose }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Save current work */}
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             {canSave ? (
               <>
                 Save the current <strong>{MODULE_LABELS[activeModule]}</strong> work
@@ -133,8 +133,8 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({ onClose }) => {
               fontSize: '12px',
               padding: '8px 10px',
               borderRadius: '6px',
-              color: message.isError ? 'var(--accent-rose)' : 'var(--accent-emerald)',
-              background: message.isError ? 'rgba(244, 63, 94, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+              color: message.isError ? 'var(--danger)' : 'var(--success)',
+              background: message.isError ? 'var(--danger-subtle)' : 'var(--success-subtle)',
             }}
           >
             {message.text}
@@ -162,9 +162,9 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({ onClose }) => {
                       alignItems: 'center',
                       gap: '8px',
                       padding: '8px 10px',
-                      borderRadius: '8px',
-                      background: 'rgba(30, 41, 59, 0.45)',
-                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--surface-3)',
+                      border: '1px solid var(--border)',
                     }}
                   >
                     {editingId === entry.id ? (
@@ -225,7 +225,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({ onClose }) => {
                       onClick={() => handleDelete(entry)}
                       title="Delete"
                       aria-label={`Delete ${entry.name}`}
-                      style={{ ...iconButton, color: 'var(--accent-rose)' }}
+                      style={{ ...iconButton, color: 'var(--danger)' }}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -237,7 +237,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({ onClose }) => {
         </div>
 
         {/* Import / export all */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
           <input
             ref={fileInput}
             type="file"

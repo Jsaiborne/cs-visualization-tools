@@ -15,8 +15,8 @@ const codeBlock: React.CSSProperties = {
   margin: 0,
   padding: '8px 10px',
   borderRadius: '6px',
-  background: 'rgba(10, 15, 30, 0.8)',
-  border: '1px solid var(--border-subtle)',
+  background: 'var(--bg)',
+  border: '1px solid var(--border)',
   fontFamily: 'var(--font-mono)',
   fontSize: '12px',
   lineHeight: 1.5,
@@ -49,7 +49,7 @@ export const GrammarTransformDialog: React.FC<{ transform: GrammarTransform; onC
 
         <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {result.steps.map((step, i) => (
-            <li key={i} style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <li key={i} style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               <div style={{ marginBottom: '4px' }}>{step.description}</div>
               {!unchanged && <pre style={codeBlock}>{step.grammarText}</pre>}
             </li>
@@ -57,7 +57,7 @@ export const GrammarTransformDialog: React.FC<{ transform: GrammarTransform; onC
         </ol>
 
         {result.warnings.map((warning) => (
-          <div key={warning} style={{ display: 'flex', gap: '6px', fontSize: '12px', color: 'var(--accent-amber)' }}>
+          <div key={warning} style={{ display: 'flex', gap: '6px', fontSize: '12px', color: 'var(--warning)' }}>
             <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '1px' }} /> {warning}
           </div>
         ))}

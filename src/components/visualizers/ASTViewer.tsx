@@ -99,11 +99,9 @@ export const ASTViewer: React.FC = () => {
       .enter()
       .append('path')
       .attr('d', linkGenerator as any)
-      .attr('fill', 'none')
-      .attr('stroke', '#475569')
-      .attr('stroke-width', 2)
-      .attr('stroke-dasharray', '4 2')
-      .attr('opacity', 0.7);
+      .style('fill', 'none')
+      .style('stroke', 'var(--border-strong)')
+      .attr('stroke-width', 1.5);
 
     // Render Node Groups
     const nodes = g
@@ -125,92 +123,78 @@ export const ASTViewer: React.FC = () => {
         setSelectedRange(null);
       });
 
-    // Helper for node colors
-    const getNodeTheme = (type: string) => {
+    // Node kinds differ only in the color of their value text; cards themselves stay neutral
+    const valueColor = (type: string) => {
       switch (type) {
-        case 'Program':
-          return { bg: '#a855f7', stroke: '#c084fc', text: '#ffffff' };
         case 'BinaryExpression':
         case 'UnaryExpression':
-          return { bg: '#0284c7', stroke: '#38bdf8', text: '#ffffff' };
+          return 'var(--cat-2)';
         case 'NumericLiteral':
-          return { bg: '#059669', stroke: '#34d399', text: '#ffffff' };
+          return 'var(--cat-4)';
         case 'Identifier':
-          return { bg: '#4f46e5', stroke: '#818cf8', text: '#ffffff' };
+          return 'var(--cat-1)';
         default:
-          return { bg: '#334155', stroke: '#64748b', text: '#ffffff' };
+          return 'var(--text)';
       }
     };
 
-    // Render Node Pill Cards
     nodes.each(function (d) {
       const el = d3.select(this);
-      const theme = getNodeTheme(d.data.type);
 
-      // Card Background Box (hover styling is applied by the highlight effect below)
+      // Card (hover styling is applied by the highlight effect below)
       el.append('rect')
         .attr('class', 'ast-card')
-        .attr('data-stroke', theme.stroke)
+        .attr('data-stroke', 'var(--border-strong)')
         .attr('x', -55)
-        .attr('y', -24)
+        .attr('y', -26)
         .attr('width', 110)
-        .attr('height', 48)
-        .attr('rx', 10)
-        .attr('ry', 10)
-        .attr('fill', 'rgba(15, 23, 42, 0.95)');
+        .attr('height', 54)
+        .attr('rx', 6)
+        .attr('ry', 6)
+        .style('fill', 'var(--surface)')
+        .style('stroke', 'var(--border-strong)')
+        .attr('stroke-width', 1.5);
 
-      // Header Pill Badge
-      el.append('rect')
-        .attr('x', -48)
-        .attr('y', -18)
-        .attr('width', 96)
-        .attr('height', 16)
-        .attr('rx', 4)
-        .attr('ry', 4)
-        .attr('fill', theme.bg)
-        .attr('opacity', 0.85);
-
-      // Node Type Title
+      // Node type
       el.append('text')
         .attr('x', 0)
-        .attr('y', -6)
+        .attr('y', -11)
         .attr('text-anchor', 'middle')
-        .attr('fill', '#ffffff')
-        .attr('font-size', '9px')
-        .attr('font-weight', '700')
-        .attr('font-family', 'var(--font-sans)')
+        .style('fill', 'var(--text-muted)')
+        .style('font-family', 'var(--font-sans)')
+        .attr('font-size', '10px')
         .text(d.data.type);
 
-      // Node Detail Value / Operator
+      // Operator / value / name
       let labelText = '';
       if (d.data.type === 'BinaryExpression' || d.data.type === 'UnaryExpression') {
-        labelText = `Op: "${d.data.operator}"`;
+        labelText = d.data.operator;
       } else if (d.data.type === 'NumericLiteral') {
-        labelText = `Val: ${d.data.value}`;
+        labelText = String(d.data.value);
       } else if (d.data.type === 'Identifier') {
-        labelText = `Id: ${d.data.name}`;
+        labelText = d.data.name;
       } else if (d.data.type === 'Program') {
-        labelText = `Root`;
+        labelText = 'root';
       }
 
       el.append('text')
         .attr('x', 0)
-        .attr('y', 14)
+        .attr('y', 6)
         .attr('text-anchor', 'middle')
-        .attr('fill', '#f8fafc')
-        .attr('font-size', '11px')
+        .style('fill', valueColor(d.data.type))
+        .style('font-family', 'var(--font-mono)')
+        .attr('font-size', '13px')
         .attr('font-weight', '600')
-        .attr('font-family', 'var(--font-mono)')
         .text(labelText);
 
-      // Offset Range Badge
+      // Source range (inside the card, clear of the links below it)
       el.append('text')
         .attr('x', 0)
-        .attr('y', 36)
+        .attr('y', 21)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'var(--text-muted)')
-        .attr('font-size', '8px')
-        .attr('font-family', 'var(--font-mono)')
+        .style('fill', 'var(--text-muted)')
+        .style('font-family', 'var(--font-mono)')
+        .attr('font-size', '9px')
         .text(`[${d.data.start}:${d.data.end}]`);
     });
 
@@ -229,9 +213,8 @@ export const ASTViewer: React.FC = () => {
         const isHovered =
           !!selectedRange && selectedRange.start === d.data.start && selectedRange.end === d.data.end;
         d3.select(this)
-          .attr('stroke', isHovered ? '#38bdf8' : this.getAttribute('data-stroke'))
-          .attr('stroke-width', isHovered ? 3 : 1.5)
-          .attr('filter', isHovered ? 'drop-shadow(0 0 10px #38bdf8)' : 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))');
+          .style('stroke', isHovered ? 'var(--accent)' : (this.getAttribute('data-stroke') ?? 'var(--border-strong)'))
+          .attr('stroke-width', isHovered ? 2 : 1.5);
       });
   }, [ast, selectedRange]);
 
@@ -253,7 +236,7 @@ export const ASTViewer: React.FC = () => {
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        background: 'rgba(15, 23, 42, 0.4)',
+        background: 'var(--surface-2)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -265,14 +248,14 @@ export const ASTViewer: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
-          background: 'rgba(15, 23, 42, 0.6)',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--surface-2)',
           zIndex: 5,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Network size={16} color="var(--accent-purple)" />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+          <Network size={16} color="var(--text-muted)" />
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
             Abstract Syntax Tree (AST)
           </span>
         </div>
@@ -304,10 +287,10 @@ export const ASTViewer: React.FC = () => {
           style={{
             margin: '20px',
             padding: '16px',
-            borderRadius: '8px',
-            background: 'rgba(245, 158, 11, 0.1)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-            color: 'var(--accent-amber)',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--warning-subtle)',
+            border: '1px solid var(--warning-border)',
+            color: 'var(--warning)',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',

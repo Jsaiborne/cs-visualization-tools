@@ -14,9 +14,9 @@ const inputStyle: React.CSSProperties = {
   fontSize: '13px',
   fontFamily: 'var(--font-mono)',
   borderRadius: '6px',
-  border: '1px solid var(--border-subtle)',
-  background: 'var(--bg-input)',
-  color: 'var(--text-primary)',
+  border: '1px solid var(--border)',
+  background: 'var(--bg)',
+  color: 'var(--text)',
   outline: 'none',
 };
 
@@ -64,16 +64,16 @@ export const CompareDialog: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         </div>
 
         {mode === 'machine' ? (
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            First: <strong style={{ color: 'var(--text-primary)' }}>{automaton.name}</strong> ({automaton.type})
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            First: <strong style={{ color: 'var(--text)' }}>{automaton.name}</strong> ({automaton.type})
           </div>
         ) : (
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
             First regex
             <input value={regexA} onChange={(e) => setRegexA(e.target.value)} style={inputStyle} />
           </label>
         )}
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
           {mode === 'machine' ? 'Regex' : 'Second regex'}
           <input value={regexB} onChange={(e) => setRegexB(e.target.value)} autoFocus style={inputStyle} />
         </label>
@@ -82,33 +82,33 @@ export const CompareDialog: React.FC<{ onClose: () => void }> = ({ onClose }) =>
           Compare
         </button>
 
-        {error && <div role="status" style={{ fontSize: '12px', color: 'var(--accent-rose)' }}>{error}</div>}
+        {error && <div role="status" style={{ fontSize: '12px', color: 'var(--danger)' }}>{error}</div>}
 
         {result && (
           <div
             role="status"
             style={{
               padding: '12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               fontSize: '13px',
               lineHeight: 1.5,
-              border: `1px solid ${result.equivalent ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)'}`,
-              background: result.equivalent ? 'rgba(16, 185, 129, 0.07)' : 'rgba(244, 63, 94, 0.07)',
+              border: `1px solid ${result.equivalent ? 'var(--success-border)' : 'var(--danger-border)'}`,
+              background: result.equivalent ? 'var(--success-subtle)' : 'var(--danger-subtle)',
             }}
           >
             {result.equivalent ? (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <CheckCircle2 size={18} color="var(--accent-emerald)" />
+                <CheckCircle2 size={18} color="var(--success)" />
                 <span>Equivalent: both accept exactly the same strings.</span>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <XCircle size={18} color="var(--accent-rose)" />
+                  <XCircle size={18} color="var(--danger)" />
                   <span>Not equivalent.</span>
                 </div>
                 <span>
-                  Shortest difference: <code style={{ color: 'var(--accent-amber)' }}>{showString(result.counterexample!)}</code> is
+                  Shortest difference: <code style={{ color: 'var(--warning)' }}>{showString(result.counterexample!)}</code> is
                   accepted by <strong>{result.acceptedBy === 'first' ? firstName : secondName}</strong> but not by{' '}
                   <strong>{result.acceptedBy === 'first' ? secondName : firstName}</strong>.
                 </span>

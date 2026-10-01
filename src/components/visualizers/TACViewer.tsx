@@ -26,7 +26,7 @@ export const TACViewer: React.FC = () => {
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        background: 'rgba(15, 23, 42, 0.4)',
+        background: 'var(--surface-2)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -38,14 +38,14 @@ export const TACViewer: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
-          background: 'rgba(15, 23, 42, 0.6)',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--surface-2)',
           zIndex: 5,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Cpu size={16} color="var(--accent-emerald)" />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+          <Cpu size={16} color="var(--text-muted)" />
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
             Three-Address Code (TAC / IR)
           </span>
         </div>
@@ -55,10 +55,10 @@ export const TACViewer: React.FC = () => {
             style={{
               fontSize: '11px',
               padding: '2px 8px',
-              borderRadius: '12px',
-              background: 'rgba(16, 185, 129, 0.15)',
-              color: '#34d399',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--success-subtle)',
+              color: 'var(--success)',
+              border: '1px solid var(--success-border)',
               fontFamily: 'var(--font-mono)',
               fontWeight: 600,
             }}
@@ -84,10 +84,10 @@ export const TACViewer: React.FC = () => {
           <div
             style={{
               padding: '16px',
-              borderRadius: '8px',
-              background: 'rgba(245, 158, 11, 0.1)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              color: 'var(--accent-amber)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--warning-subtle)',
+              border: '1px solid var(--warning-border)',
+              color: 'var(--warning)',
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
@@ -151,19 +151,11 @@ export const TACViewer: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '10px 14px',
-                      borderRadius: '8px',
-                      background: isHovered
-                        ? 'rgba(56, 189, 248, 0.12)'
-                        : 'rgba(15, 23, 42, 0.65)',
-                      border: isHovered
-                        ? '1px solid #38bdf8'
-                        : '1px solid var(--border-subtle)',
-                      boxShadow: isHovered
-                        ? '0 0 14px rgba(56, 189, 248, 0.25)'
-                        : '0 2px 6px rgba(0, 0, 0, 0.2)',
+                      borderRadius: 'var(--radius-md)',
+                      background: isHovered ? 'var(--surface-2)' : 'var(--surface)',
+                      border: `1px solid ${isHovered ? 'var(--accent)' : 'var(--border)'}`,
                       cursor: 'pointer',
-                      transition: 'all 150ms ease',
-                      transform: isHovered ? 'translateX(4px)' : 'none',
+                      transition: 'background 120ms ease, border-color 120ms ease',
                     }}
                   >
                     {/* Left: Instruction Line Number and Statement */}
@@ -174,7 +166,7 @@ export const TACViewer: React.FC = () => {
                           fontSize: '11px',
                           fontFamily: 'var(--font-mono)',
                           fontWeight: 700,
-                          color: isHovered ? '#38bdf8' : 'var(--text-muted)',
+                          color: isHovered ? 'var(--accent)' : 'var(--text-muted)',
                           width: '24px',
                         }}
                       >
@@ -184,18 +176,18 @@ export const TACViewer: React.FC = () => {
                       {/* Monospaced TAC Statement */}
                       <div
                         style={{
-                          fontFamily: 'JetBrains Mono, monospace',
+                          fontFamily: 'var(--font-mono)',
                           fontSize: '13px',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
-                          color: '#f8fafc',
+                          color: 'var(--text)',
                         }}
                       >
                         {/* Target Temp Variable */}
                         <span
                           style={{
-                            color: '#c084fc',
+                            color: 'var(--cat-2)',
                             fontWeight: 700,
                           }}
                         >
@@ -205,12 +197,12 @@ export const TACViewer: React.FC = () => {
                         <span style={{ color: 'var(--text-muted)' }}>=</span>
 
                         {/* Operand 1 (binary form: arg1 op arg2) */}
-                        {instr.arg2 !== null && <span style={{ color: '#38bdf8' }}>{instr.arg1}</span>}
+                        {instr.arg2 !== null && <span style={{ color: 'var(--accent)' }}>{instr.arg1}</span>}
 
                         {/* Operator */}
                         <span
                           style={{
-                            color: '#f43f5e',
+                            color: 'var(--danger)',
                             fontWeight: 700,
                             padding: '0 2px',
                           }}
@@ -219,7 +211,7 @@ export const TACViewer: React.FC = () => {
                         </span>
 
                         {/* Operand 2, or the sole operand of a unary op */}
-                        <span style={{ color: '#38bdf8' }}>{instr.arg2 ?? instr.arg1}</span>
+                        <span style={{ color: 'var(--accent)' }}>{instr.arg2 ?? instr.arg1}</span>
                       </div>
                     </div>
 
@@ -231,13 +223,13 @@ export const TACViewer: React.FC = () => {
                           style={{
                             fontSize: '10px',
                             fontFamily: 'var(--font-mono)',
-                            color: isHovered ? '#38bdf8' : 'var(--text-muted)',
+                            color: isHovered ? 'var(--accent)' : 'var(--text-muted)',
                             background: isHovered
-                              ? 'rgba(56, 189, 248, 0.2)'
-                              : 'rgba(30, 41, 59, 0.5)',
+                              ? 'var(--accent-subtle)'
+                              : 'var(--surface-3)',
                             padding: '2px 6px',
                             borderRadius: '4px',
-                            border: '1px solid var(--border-subtle)',
+                            border: '1px solid var(--border)',
                           }}
                         >
                           [{instr.originalRange.start}:{instr.originalRange.end}]
@@ -254,17 +246,17 @@ export const TACViewer: React.FC = () => {
               style={{
                 marginTop: 'auto',
                 padding: '12px',
-                borderRadius: '8px',
-                background: 'rgba(30, 41, 59, 0.3)',
-                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--surface-3)',
+                border: '1px solid var(--border)',
                 fontSize: '11px',
                 color: 'var(--text-muted)',
                 lineHeight: '1.5',
               }}
             >
-              <strong style={{ color: 'var(--text-secondary)' }}>💡 IR Generation Note:</strong>{' '}
+              <strong style={{ color: 'var(--text-muted)' }}>💡 IR Generation Note:</strong>{' '}
               Three-Address Code (TAC) linearizes hierarchical AST expressions into quad-operand instructions of form{' '}
-              <code style={{ color: '#c084fc' }}>result = arg1 op arg2</code>. Hover any line to highlight its corresponding sub-expression in the source editor.
+              <code style={{ color: 'var(--cat-2)' }}>result = arg1 op arg2</code>. Hover any line to highlight its corresponding sub-expression in the source editor.
             </div>
           </>
         )}

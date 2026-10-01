@@ -7,7 +7,7 @@ export const ShortcutsHelp: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
       <tbody>
         {SHORTCUTS.map(({ keys, action }) => (
-          <tr key={keys} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <tr key={keys} style={{ borderBottom: '1px solid var(--border)' }}>
             <td style={{ padding: '8px 12px 8px 0', whiteSpace: 'nowrap' }}>
               <kbd
                 style={{
@@ -15,14 +15,14 @@ export const ShortcutsHelp: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                   fontSize: '12px',
                   padding: '2px 6px',
                   borderRadius: '4px',
-                  border: '1px solid var(--border-subtle)',
-                  background: 'rgba(30, 41, 59, 0.6)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-3)',
                 }}
               >
                 {keys}
               </kbd>
             </td>
-            <td style={{ padding: '8px 0', color: 'var(--text-secondary)' }}>{action}</td>
+            <td style={{ padding: '8px 0', color: 'var(--text-muted)' }}>{action}</td>
           </tr>
         ))}
       </tbody>

@@ -38,13 +38,12 @@ const LRStateNode: React.FC<NodeProps> = ({ data }) => {
     <div
       style={{
         ...boxSize(items),
-        borderRadius: '8px',
-        background: isActive ? 'rgba(56, 189, 248, 0.14)' : 'rgba(15, 23, 42, 0.95)',
-        border: `2px solid ${isActive ? 'var(--accent-blue)' : hasConflict ? 'var(--accent-rose)' : 'rgba(148, 163, 184, 0.35)'}`,
-        boxShadow: isActive ? '0 0 18px rgba(56, 189, 248, 0.45)' : 'var(--shadow-glass)',
+        borderRadius: 'var(--radius-md)',
+        background: isActive ? 'var(--accent-subtle)' : 'var(--surface)',
+        border: `2px solid ${isActive ? 'var(--accent)' : hasConflict ? 'var(--danger)' : 'var(--border-strong)'}`,
         fontFamily: 'var(--font-mono)',
         fontSize: '11px',
-        color: 'var(--text-primary)',
+        color: 'var(--text)',
         overflow: 'hidden',
       }}
     >
@@ -55,8 +54,8 @@ const LRStateNode: React.FC<NodeProps> = ({ data }) => {
           padding: '4px 8px',
           fontWeight: 700,
           fontSize: '12px',
-          borderBottom: '1px solid var(--border-subtle)',
-          color: isActive ? 'var(--accent-blue)' : hasConflict ? 'var(--accent-rose)' : 'var(--accent-purple)',
+          borderBottom: '1px solid var(--border)',
+          color: isActive ? 'var(--accent)' : hasConflict ? 'var(--danger)' : 'var(--cat-2)',
           display: 'flex',
           justifyContent: 'space-between',
         }}
@@ -131,7 +130,7 @@ const LRStateGraphInner: React.FC<LRStateGraphProps> = ({ table, activeState }) 
       table.states.flatMap((s) =>
         Object.entries(s.transitions).map(([symbol, to]) => {
           const isNonTerminal = table.nonTerminals.includes(symbol);
-          const color = isNonTerminal ? '#a855f7' : '#64748b';
+          const color = isNonTerminal ? 'var(--cat-2)' : 'var(--text-faint)';
           return {
             id: `g${s.id}-${symbol}`,
             source: String(s.id),
@@ -139,8 +138,8 @@ const LRStateGraphInner: React.FC<LRStateGraphProps> = ({ table, activeState }) 
             label: symbol,
             type: s.id === to ? 'selfLoop' : 'default',
             style: { stroke: color, strokeWidth: 1.6 },
-            labelStyle: { fill: isNonTerminal ? '#d8b4fe' : '#cbd5e1', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '12px' },
-            labelBgStyle: { fill: 'rgba(15, 23, 42, 0.95)' },
+            labelStyle: { fill: isNonTerminal ? 'var(--cat-2)' : 'var(--text)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '12px' },
+            labelBgStyle: { fill: 'var(--surface)' },
             labelBgPadding: [4, 2] as [number, number],
             markerEnd: { type: MarkerType.ArrowClosed, color, width: 16, height: 16 },
           };
@@ -162,7 +161,7 @@ const LRStateGraphInner: React.FC<LRStateGraphProps> = ({ table, activeState }) 
       minZoom={0.1}
       proOptions={{ hideAttribution: true }}
     >
-      <Background color="#334155" gap={28} size={1} />
+      <Background color="var(--border)" gap={28} size={1} />
       <Controls showInteractive={false} />
     </ReactFlow>
   );

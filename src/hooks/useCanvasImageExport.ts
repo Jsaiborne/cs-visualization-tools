@@ -18,7 +18,7 @@ export function useCanvasImageExport() {
     const height = Math.ceil(bounds.height + IMAGE_PADDING.top + IMAGE_PADDING.bottom);
     const { toPng, toSvg } = await import('html-to-image');
     const options = {
-      backgroundColor: '#090d16',
+      backgroundColor: '#0f1115',
       width,
       height,
       pixelRatio: 2,

@@ -165,21 +165,22 @@ const DFACanvasInner: React.FC = () => {
         type: isSelfLoop ? 'selfLoop' : 'curved',
         data: isSelfLoop ? { loopIndex: offsetIndex } : { offsetIndex, groupSize: groupSizes.get(key) },
         style: {
-          stroke: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#a855f7' : '#64748b'),
-          strokeWidth: isEdgeActive ? 3 : 2,
+          // ε-edges are told apart by their dash; color only marks the active step
+          stroke: isEdgeActive ? 'var(--accent)' : 'var(--text-faint)',
+          strokeWidth: isEdgeActive ? 2.5 : 1.5,
           strokeDasharray: isEpsilonEdge ? '6 4' : 'none',
           transition: 'stroke 300ms ease, stroke-width 300ms ease, opacity 300ms ease',
           opacity,
         },
         labelStyle: {
-          fill: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#c084fc' : '#94a3b8'),
+          fill: isEdgeActive ? 'var(--accent)' : 'var(--text-muted)',
           fontFamily: 'var(--font-mono)',
-          fontWeight: 700,
-          fontSize: '14px',
+          fontWeight: 600,
+          fontSize: '13px',
           opacity,
         },
         labelBgStyle: {
-          fill: 'rgba(15, 23, 42, 0.95)',
+          fill: 'var(--bg)',
           rx: 4,
           ry: 4,
           opacity,
@@ -187,9 +188,9 @@ const DFACanvasInner: React.FC = () => {
         labelBgPadding: [6, 4],
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isEdgeActive ? (isEpsilonEdge ? '#c084fc' : '#38bdf8') : (isEpsilonEdge ? '#a855f7' : '#64748b'),
-          width: 18,
-          height: 18,
+          color: isEdgeActive ? 'var(--accent)' : 'var(--text-faint)',
+          width: 16,
+          height: 16,
         },
       };
     });
@@ -275,7 +276,7 @@ const DFACanvasInner: React.FC = () => {
         height: '100%',
         position: 'relative',
         containerType: 'inline-size',
-        background: 'radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.3) 0%, rgba(9, 13, 22, 0.95) 100%)',
+        background: 'var(--bg)',
       }}
     >
       <ReactFlow
@@ -292,23 +293,11 @@ const DFACanvasInner: React.FC = () => {
         minZoom={0.2}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#334155" gap={28} size={1} />
-        <Controls
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            overflow: 'hidden',
-          }}
-        />
+        <Background color="var(--border)" gap={24} size={1} />
+        <Controls />
         <MiniMap
-          style={{
-            background: 'var(--bg-sidebar)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-          }}
-          nodeColor={(node) => (node.data.isActive ? '#38bdf8' : '#334155')}
-          maskColor="rgba(9, 13, 22, 0.7)"
+          nodeColor={(node) => (node.data.isActive ? 'var(--accent)' : 'var(--border)')}
+          maskColor="var(--overlay)"
         />
 
         {/* Builder Toolbar Panel */}
@@ -326,8 +315,7 @@ const DFACanvasInner: React.FC = () => {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'rgba(9, 13, 22, 0.75)',
-            backdropFilter: 'blur(8px)',
+            background: 'var(--overlay)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -336,21 +324,20 @@ const DFACanvasInner: React.FC = () => {
         >
           <form
             onSubmit={handleConfirmConnection}
-            className="glass-panel"
+            className="panel"
             style={{
               width: '320px',
               padding: '20px',
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
-              boxShadow: 'var(--shadow-glass)',
             }}
           >
-            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>
               Add Transition Edge
             </h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-              Specify transition symbol for <code style={{ color: 'var(--accent-blue)' }}>{pendingConnection.source}</code> ➔ <code style={{ color: 'var(--accent-purple)' }}>{pendingConnection.target}</code>:
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+              Specify transition symbol for <code style={{ color: 'var(--accent)' }}>{pendingConnection.source}</code> ➔ <code style={{ color: 'var(--cat-2)' }}>{pendingConnection.target}</code>:
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -364,11 +351,11 @@ const DFACanvasInner: React.FC = () => {
                 onChange={(e) => setTransitionSymbol(e.target.value)}
                 placeholder="Enter character"
                 style={{
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
                   borderRadius: '6px',
                   padding: '8px 12px',
-                  color: '#ffffff',
+                  color: 'var(--text)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '14px',
                   outline: 'none',
@@ -399,7 +386,7 @@ const DFACanvasInner: React.FC = () => {
 
       {/* Floating Canvas Overlay Badge */}
       <div
-        className="glass-panel"
+        className="panel"
         style={{
           position: 'absolute',
           top: '20px',
@@ -419,15 +406,14 @@ const DFACanvasInner: React.FC = () => {
             borderRadius: '50%',
             background:
               status === 'ACCEPTED'
-                ? 'var(--accent-emerald)'
+                ? 'var(--success)'
                 : status === 'REJECTED'
-                ? 'var(--accent-rose)'
-                : 'var(--accent-blue)',
-            boxShadow: '0 0 10px currentColor',
+                ? 'var(--danger)'
+                : 'var(--accent)',
           }}
         />
         <span style={{ fontSize: '13px', fontWeight: 600, fontFamily: 'var(--font-sans)' }}>
-          State: <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{currentStateId}</code>
+          State: <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>{currentStateId}</code>
         </span>
       </div>
     </div>

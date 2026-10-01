@@ -44,7 +44,7 @@ export const CanvasViewport: React.FC = () => {
       id="main-viewport-container"
       style={{
         flex: 1,
-        height: 'calc(100vh - 60px)',
+        height: '100%',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -59,66 +59,38 @@ export const CanvasViewport: React.FC = () => {
           {/* Sub-Header Machine Mode Switcher Bar */}
           <div
             style={{
-              height: '42px',
-              padding: '0 20px',
-              background: 'rgba(15, 23, 42, 0.9)',
-              borderBottom: '1px solid var(--border-subtle)',
+              height: '40px',
+              padding: '0 12px 0 8px',
+              background: 'var(--surface)',
+              borderBottom: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               zIndex: 10,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '6px' }}>
-                Machine Mode:
-              </span>
+            <div className="tabs" role="tablist" aria-label="Machine mode" style={{ alignSelf: 'stretch' }}>
               <button
+                role="tab"
+                className="tab"
+                aria-selected={automaton.type !== 'TM'}
                 onClick={() => {
-                  if (automaton.type === 'TM') {
-                    setAutomaton(defaultDFA);
-                  }
+                  if (automaton.type === 'TM') setAutomaton(defaultDFA);
                 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '3px 10px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  fontSize: '11px',
-                  fontWeight: automaton.type !== 'TM' ? 600 : 400,
-                  background: automaton.type !== 'TM' ? 'var(--accent-purple)' : 'transparent',
-                  color: automaton.type !== 'TM' ? '#ffffff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  transition: 'all 150ms ease',
-                }}
+                style={{ fontSize: '12px' }}
               >
-                <Network size={13} /> Automata Canvas (DFA / NFA)
+                <Network size={14} /> Automata Canvas (DFA / NFA)
               </button>
-
               <button
+                role="tab"
+                className="tab"
+                aria-selected={automaton.type === 'TM'}
                 onClick={() => {
-                  if (automaton.type !== 'TM') {
-                    setAutomaton(defaultTM);
-                  }
+                  if (automaton.type !== 'TM') setAutomaton(defaultTM);
                 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '3px 10px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  fontSize: '11px',
-                  fontWeight: automaton.type === 'TM' ? 600 : 400,
-                  background: automaton.type === 'TM' ? 'var(--accent-blue)' : 'transparent',
-                  color: automaton.type === 'TM' ? '#ffffff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  transition: 'all 150ms ease',
-                }}
+                style={{ fontSize: '12px' }}
               >
-                <Cpu size={13} /> Turing Machine (TM)
+                <Cpu size={14} /> Turing Machine (TM)
               </button>
             </div>
 

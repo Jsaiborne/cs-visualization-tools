@@ -1,422 +1,148 @@
 import React from 'react';
-import {
-  Network,
-  Binary,
-  Cpu,
-  Code2,
-  Database,
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Share2,
-  Layers,
-} from 'lucide-react';
+import { Network, Binary, Cpu, Code2, Database, Layers, ArrowRight } from 'lucide-react';
 import { useUIStore, type ActiveModule, type CompilerTab } from '../../store/useUIStore';
+import { BrandMark } from './BrandMark';
+
+interface ModuleCard {
+  id: ActiveModule;
+  /** For compiler cards: which compiler tab to open */
+  compilerTab?: CompilerTab;
+  title: string;
+  tag: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const MODULE_CARDS: ModuleCard[] = [
+  {
+    id: 'AUTOMATA',
+    title: 'Finite Automata & Turing Machines',
+    tag: 'State machines',
+    description:
+      'Build DFAs and NFAs on a canvas, convert NFAs to DFAs, minimize them, compare languages, and run a Turing machine on its tape.',
+    icon: <Network size={18} />,
+  },
+  {
+    id: 'REGEX',
+    title: "Regex & Thompson's Construction",
+    tag: 'Regular languages',
+    description: 'Turn a regular expression into an ε-NFA with Thompson’s construction and watch it run on an input.',
+    icon: <Binary size={18} />,
+  },
+  {
+    id: 'GRAMMAR',
+    title: 'Context-Free Grammars & LL(1) Parsing',
+    tag: 'Top-down parsing',
+    description:
+      'FIRST/FOLLOW sets, the LL(1) table with its conflicts, left-recursion removal and left factoring, and a parse tree that grows step by step.',
+    icon: <Cpu size={18} />,
+  },
+  {
+    id: 'LR',
+    title: 'LR Parsing: LR(0), SLR, LALR, LR(1)',
+    tag: 'Bottom-up parsing',
+    description:
+      'Item-set automata and ACTION/GOTO tables for four methods side by side, and a shift-reduce parse that builds the tree bottom-up.',
+    icon: <Layers size={18} />,
+  },
+  {
+    id: 'COMPILER_AST',
+    compilerTab: 'AST',
+    title: 'Lexical Analysis & Interactive AST',
+    tag: 'Compiler front end',
+    description: 'Tokens, a syntax tree and three-address code for arithmetic expressions, linked back to the source as you hover.',
+    icon: <Code2 size={18} />,
+  },
+  {
+    id: 'COMPILER_AST',
+    compilerTab: 'SYMBOL_TABLE',
+    title: 'Semantic Analysis & Symbol Table',
+    tag: 'Scopes',
+    description: 'Step through nested scopes to see declarations, shadowing, and errors for undeclared or redeclared names.',
+    icon: <Database size={18} />,
+  },
+];
 
 export const LandingPage: React.FC = () => {
   const setActiveModule = useUIStore((state) => state.setActiveModule);
   const setCompilerTab = useUIStore((state) => state.setCompilerTab);
 
-  const moduleCards: {
-    id: ActiveModule;
-    /** For compiler cards: which compiler tab to open */
-    compilerTab?: CompilerTab;
-    title: string;
-    tag: string;
-    description: string;
-    icon: React.ReactNode;
-    color: string;
-    bgGradient: string;
-  }[] = [
-    {
-      id: 'AUTOMATA',
-      title: 'Finite Automata & Turing Machines',
-      tag: 'State Machines & Tape Memory',
-      description:
-        'Interactive drag-and-drop DFA/NFA state graph builder, real-time determinism validator, and 1D bi-infinite tape Turing Machine simulator with step execution snapshots.',
-      icon: <Network size={28} />,
-      color: 'var(--accent-blue)',
-      bgGradient: 'radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), transparent 70%)',
-    },
-    {
-      id: 'REGEX',
-      title: "Regex & Thompson's Construction",
-      tag: 'Regular Languages',
-      description:
-        'Regex infix-to-postfix Shunting-Yard parser, explicit concatenation operator insertion, Thompson NFA state graph auto-layout, and multi-state active set highlights.',
-      icon: <Binary size={28} />,
-      color: 'var(--accent-purple)',
-      bgGradient: 'radial-gradient(circle at top right, rgba(168, 85, 247, 0.15), transparent 70%)',
-    },
-    {
-      id: 'GRAMMAR',
-      title: 'Context-Free Grammars & LL(1) Parsing',
-      tag: 'Syntax Analysis',
-      description:
-        'CFG editor with FIRST/FOLLOW sets, LL(1) table with conflict detection, left-recursion removal and left factoring, and a parse tree that grows as the stack machine runs.',
-      icon: <Cpu size={28} />,
-      color: 'var(--accent-pink)',
-      bgGradient: 'radial-gradient(circle at top right, rgba(236, 72, 153, 0.15), transparent 70%)',
-    },
-    {
-      id: 'LR',
-      title: 'LR Parsing: LR(0), SLR, LALR, LR(1)',
-      tag: 'Bottom-Up Parsing',
-      description:
-        'Canonical item-set automaton, ACTION/GOTO tables for four methods side by side with their conflicts, and a shift-reduce parse that builds the tree bottom-up.',
-      icon: <Layers size={28} />,
-      color: 'var(--accent-blue)',
-      bgGradient: 'radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), transparent 70%)',
-    },
-    {
-      id: 'COMPILER_AST',
-      compilerTab: 'AST',
-      title: 'Lexical Analysis & Interactive AST',
-      tag: 'Compiler Front-End',
-      description:
-        'Character-offset token stream scanner, recursive descent parser, and interactive D3.js AST tree diagram with Monaco Code Editor cross-component line decorations.',
-      icon: <Code2 size={28} />,
-      color: 'var(--accent-emerald)',
-      bgGradient: 'radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 70%)',
-    },
-    {
-      id: 'COMPILER_AST',
-      compilerTab: 'SYMBOL_TABLE',
-      title: 'Semantic Analysis & Symbol Table',
-      tag: 'Scope & IR Generation',
-      description:
-        'Vertical stack visualizer for lexical scope dictionaries, variable declaration & shadowing inspector, and Three-Address Code (TAC) intermediate representation generator.',
-      icon: <Database size={28} />,
-      color: 'var(--accent-amber)',
-      bgGradient: 'radial-gradient(circle at top right, rgba(245, 158, 11, 0.15), transparent 70%)',
-    },
-  ];
+  const open = (card: ModuleCard) => {
+    if (card.compilerTab) setCompilerTab(card.compilerTab);
+    setActiveModule(card.id);
+  };
 
   return (
-    <div
-      style={{
-        flex: 1,
-        height: '100%',
-        overflowY: 'auto',
-        background: 'var(--bg-dark)',
-        padding: '36px 24px 60px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <div style={{ maxWidth: '1200px', width: '100%' }}>
-        {/* Top Announcement Pill */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 16px',
-              borderRadius: '20px',
-              background: 'rgba(56, 189, 248, 0.1)',
-              border: '1px solid rgba(56, 189, 248, 0.25)',
-              color: 'var(--accent-blue)',
-              fontSize: '12px',
-              fontWeight: 600,
-              backdropFilter: 'var(--glass-backdrop)',
-            }}
-          >
-            <Sparkles size={14} />
-            <span>Theory of Computation & Compiler Visualization Platform</span>
-          </div>
-        </div>
-
-        {/* Hero Banner Header */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1
-            className="gradient-text"
-            style={{
-              fontSize: '42px',
-              fontWeight: 800,
-              lineHeight: 1.15,
-              letterSpacing: '-0.03em',
-              marginBottom: '16px',
-              maxWidth: '850px',
-              marginInline: 'auto',
-            }}
-          >
-            Explore Automata, Parsing Algorithms & Compilers Interactively
+    <div style={{ flex: 1, height: '100%', overflowY: 'auto', background: 'var(--bg)', padding: '56px 24px 40px' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+        {/* Intro */}
+        <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px', marginBottom: '48px' }}>
+          <BrandMark size={56} />
+          <h1 style={{ fontSize: '30px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            TOC & Compiler Suite
           </h1>
-          <p
-            style={{
-              fontSize: '16px',
-              color: 'var(--text-secondary)',
-              maxWidth: '680px',
-              marginInline: 'auto',
-              lineHeight: 1.6,
-              marginBottom: '28px',
-            }}
-          >
-            A high-performance visual laboratory for computer science students and engineers. Build DFAs/NFAs, simulate Turing Machines, parse CFG grammars, inspect ASTs, and analyze symbol tables with 100% time-travel execution.
+          <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: '620px' }}>
+            Interactive visualizations for automata, parsing and compilers. Every algorithm runs step by step, forwards
+            and backwards, so you can see exactly how it gets its answer.
           </p>
-
-          {/* Quick Action Hero Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <button
-              className="btn-primary"
-              onClick={() => setActiveModule('AUTOMATA')}
-              style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '8px' }}
-            >
-              Launch Automata Studio <ArrowRight size={16} />
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+            <button className="btn-primary" onClick={() => setActiveModule('AUTOMATA')} style={{ padding: '8px 16px' }}>
+              Open automata <ArrowRight size={15} />
             </button>
-
-            <button
-              className="btn-secondary"
-              onClick={() => setActiveModule('COMPILER_AST')}
-              style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '8px' }}
-            >
-              <Code2 size={16} /> Open Compiler Visualizer
+            <button className="btn" onClick={() => setActiveModule('COMPILER_AST')} style={{ padding: '8px 16px' }}>
+              Open compiler
             </button>
           </div>
-        </div>
+        </section>
 
-        {/* Suite Feature Badges Bar */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '12px',
-            marginBottom: '44px',
-          }}
-        >
-          <div
-            className="glass-panel"
-            style={{
-              padding: '14px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              borderRadius: '10px',
-            }}
-          >
-            <Zap size={20} color="var(--accent-blue)" />
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Time-Travel Engine
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Step forward & backward through steps
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="glass-panel"
-            style={{
-              padding: '14px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              borderRadius: '10px',
-            }}
-          >
-            <Share2 size={20} color="var(--accent-purple)" />
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Deep Link Sharing
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Base64 URL serialized machine state
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="glass-panel"
-            style={{
-              padding: '14px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              borderRadius: '10px',
-            }}
-          >
-            <ShieldCheck size={20} color="var(--accent-emerald)" />
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Real-Time Validation
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                DFA determinism & LL(1) table checks
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section Heading */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Visualization Modules & Tools
-          </h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            Select any module to open its dedicated interactive workspace.
-          </p>
-        </div>
-
-        {/* Cards Grid */}
+        {/* Modules */}
+        <h2 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '12px' }}>Modules</h2>
         <div
           className="landing-module-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '20px',
-            marginBottom: '40px',
-          }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '12px', marginBottom: '40px' }}
         >
-          {moduleCards.map((card, idx) => (
-            <div
-              key={idx}
-              className="glass-panel"
-              onClick={() => {
-                if (card.compilerTab) setCompilerTab(card.compilerTab);
-                setActiveModule(card.id);
-              }}
+          {MODULE_CARDS.map((card) => (
+            <button
+              key={card.title}
+              className="panel landing-card"
+              onClick={() => open(card)}
               style={{
-                padding: '24px',
-                borderRadius: '14px',
+                textAlign: 'left',
+                padding: '18px',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
-                transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-                background: card.bgGradient,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = card.color;
-                e.currentTarget.style.boxShadow = `0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px ${card.color}33`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-glass)';
+                gap: '8px',
+                color: 'var(--text)',
               }}
             >
-              <div>
-                {/* Header Tag & Icon */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '16px',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      background: 'rgba(15, 23, 42, 0.8)',
-                      border: `1px solid ${card.color}44`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: card.color,
-                      boxShadow: `0 0 12px ${card.color}22`,
-                    }}
-                  >
-                    {card.icon}
-                  </div>
-
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      background: 'rgba(30, 41, 59, 0.7)',
-                      border: '1px solid var(--border-subtle)',
-                      color: card.color,
-                    }}
-                  >
-                    {card.tag}
-                  </span>
-                </div>
-
-                <h3
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    marginBottom: '8px',
-                  }}
-                >
-                  {card.title}
-                </h3>
-
-                <p
-                  style={{
-                    fontSize: '13px',
-                    color: 'var(--text-secondary)',
-                    lineHeight: 1.5,
-                    marginBottom: '20px',
-                  }}
-                >
-                  {card.description}
-                </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-muted)' }}>
+                {card.icon}
+                <span style={{ fontSize: '12px' }}>{card.tag}</span>
               </div>
-
-              {/* Card Footer Action */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: card.color,
-                }}
-              >
-                <span>Launch Tool</span>
-                <ArrowRight size={14} />
-              </div>
-            </div>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, lineHeight: 1.35 }}>{card.title}</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.55 }}>{card.description}</p>
+            </button>
           ))}
         </div>
 
-        {/* Dedicated AdSense Slot */}
-        <div
-          id="adsense-slot-landing"
-          style={{
-            width: '100%',
-            padding: '16px',
-            borderRadius: '10px',
-            background: 'rgba(15, 23, 42, 0.4)',
-            border: '1px dashed var(--border-subtle)',
-            textAlign: 'center',
-            fontSize: '11px',
-            color: 'var(--text-muted)',
-            marginBottom: '40px',
-          }}
-        >
-          Google AdSense Sponsor Slot (`#adsense-slot-landing`)
-        </div>
+        {/* Reserved for a sponsor/ad slot; renders as nothing until filled */}
+        <div id="adsense-slot-landing" />
 
-        {/* Footer */}
         <footer
           style={{
-            borderTop: '1px solid var(--border-subtle)',
-            paddingTop: '20px',
+            borderTop: '1px solid var(--border)',
+            paddingTop: '16px',
             display: 'flex',
-            alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
             fontSize: '12px',
             color: 'var(--text-muted)',
           }}
         >
-          <div>Theory of Computation & Compiler Visualizer Suite v1.0</div>
-          <div>Built with React, TypeScript, D3.js, React Flow, Zustand & Monaco Editor</div>
+          <span>TOC & Compiler Suite</span>
+          <span>Runs entirely in your browser. Save work in the Library or share it as a link.</span>
         </footer>
       </div>
     </div>

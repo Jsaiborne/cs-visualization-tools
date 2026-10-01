@@ -59,7 +59,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({ automaton, onImage }) =>
   return (
     <div ref={menuRef} style={{ position: 'relative' }}>
       <button
-        className="btn-secondary"
+        className="btn-ghost"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -73,7 +73,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({ automaton, onImage }) =>
       {open && (
         <div
           role="menu"
-          className="glass-panel"
+          className="panel"
           style={{
             position: 'absolute',
             top: 'calc(100% + 6px)',
@@ -83,7 +83,8 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({ automaton, onImage }) =>
             display: 'flex',
             flexDirection: 'column',
             zIndex: 50,
-            background: 'rgba(15, 23, 42, 0.98)',
+            boxShadow: 'var(--shadow-popover)',
+            background: 'var(--surface)',
           }}
         >
           {items.map((item) => (
@@ -98,10 +99,10 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({ automaton, onImage }) =>
                 border: 'none',
                 borderRadius: '6px',
                 background: 'transparent',
-                color: 'var(--text-primary)',
+                color: 'var(--text)',
                 cursor: 'pointer',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(56, 189, 248, 0.12)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-3)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               {item.label}

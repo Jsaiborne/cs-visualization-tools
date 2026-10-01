@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, Cpu } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore } from '../../store/useAutomataStore';
 import type { TMConfig } from '../../types/automata';
@@ -48,13 +48,12 @@ export const TuringMachineTape: React.FC = () => {
         alignItems: 'center',
         width: '100%',
         flexShrink: 0,
-        background: 'rgba(9, 13, 22, 0.85)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '12px',
-        padding: '24px 16px',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md)',
+        padding: '14px 16px 18px',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Header Info */}
@@ -64,47 +63,16 @@ export const TuringMachineTape: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '20px',
-          paddingBottom: '12px',
-          borderBottom: '1px solid var(--border-subtle)',
+          marginBottom: '16px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Cpu size={18} color="var(--accent-blue)" />
-          <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            1D Infinite Tape Memory
-          </span>
-        </div>
+        <span style={{ fontSize: '13px', fontWeight: 600 }}>Tape</span>
 
         {/* Status Badge & Active Head Position */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
-            style={{
-              padding: '3px 10px',
-              borderRadius: '12px',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 600,
-              background:
-                status === 'ACCEPTED'
-                  ? 'rgba(16, 185, 129, 0.15)'
-                  : status === 'REJECTED'
-                  ? 'rgba(244, 63, 94, 0.15)'
-                  : 'rgba(56, 189, 248, 0.15)',
-              color:
-                status === 'ACCEPTED'
-                  ? '#34d399'
-                  : status === 'REJECTED'
-                  ? '#f43f5e'
-                  : '#38bdf8',
-              border: `1px solid ${
-                status === 'ACCEPTED'
-                  ? 'rgba(16, 185, 129, 0.3)'
-                  : status === 'REJECTED'
-                  ? 'rgba(244, 63, 94, 0.3)'
-                  : 'rgba(56, 189, 248, 0.3)'
-              }`,
-            }}
+            className={`badge ${status === 'ACCEPTED' ? 'badge-success' : status === 'REJECTED' ? 'badge-danger' : ''}`}
+            style={{ fontFamily: 'var(--font-mono)' }}
           >
             Head Pos: {headIndex} | Status: {status}
           </div>
@@ -123,14 +91,13 @@ export const TuringMachineTape: React.FC = () => {
       >
         <div
           style={{
-            padding: '4px 10px',
-            borderRadius: '6px',
-            background: 'var(--gradient-primary)',
-            color: '#ffffff',
+            padding: '2px 8px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--accent-subtle)',
+            color: 'var(--accent)',
             fontSize: '11px',
-            fontWeight: 700,
+            fontWeight: 600,
             fontFamily: 'var(--font-mono)',
-            boxShadow: 'var(--shadow-glow)',
             marginBottom: '4px',
             display: 'flex',
             alignItems: 'center',
@@ -140,7 +107,7 @@ export const TuringMachineTape: React.FC = () => {
           <span>HEAD</span>
           <span style={{ opacity: 0.8 }}>({currentStateId})</span>
         </div>
-        <ArrowDown size={22} color="#38bdf8" style={{ filter: 'drop-shadow(0 0 6px #38bdf8)' }} />
+        <ArrowDown size={18} color="var(--accent)" />
       </div>
 
       {/* Tape Viewport Container */}
@@ -154,32 +121,6 @@ export const TuringMachineTape: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        {/* Left & Right Fading Gradient Overlays */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: '80px',
-            background: 'linear-gradient(to right, rgba(9, 13, 22, 0.95), transparent)',
-            zIndex: 5,
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: '80px',
-            background: 'linear-gradient(to left, rgba(9, 13, 22, 0.95), transparent)',
-            zIndex: 5,
-            pointerEvents: 'none',
-          }}
-        />
-
         {/* Translating Track of Tape Cells */}
         <div
           style={{
@@ -205,22 +146,13 @@ export const TuringMachineTape: React.FC = () => {
                 style={{
                   width: `${CELL_WIDTH}px`,
                   height: '64px',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--radius-md)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: isHead
-                    ? 'rgba(56, 189, 248, 0.18)'
-                    : symbol === blankSymbol
-                    ? 'rgba(15, 23, 42, 0.4)'
-                    : 'rgba(30, 41, 59, 0.8)',
-                  border: isHead
-                    ? '2px solid #38bdf8'
-                    : '1px solid var(--border-subtle)',
-                  boxShadow: isHead
-                    ? '0 0 16px rgba(56, 189, 248, 0.4), inset 0 0 10px rgba(56, 189, 248, 0.2)'
-                    : 'none',
+                  background: isHead ? 'var(--accent-subtle)' : symbol === blankSymbol ? 'var(--bg)' : 'var(--surface-2)',
+                  border: isHead ? '2px solid var(--accent)' : '1px solid var(--border)',
                   transition: 'all 200ms ease',
                   userSelect: 'none',
                 }}
@@ -228,14 +160,10 @@ export const TuringMachineTape: React.FC = () => {
                 {/* Monospace Symbol */}
                 <span
                   style={{
-                    fontFamily: 'JetBrains Mono, monospace',
+                    fontFamily: 'var(--font-mono)',
                     fontSize: '20px',
-                    fontWeight: 700,
-                    color: isHead
-                      ? '#ffffff'
-                      : symbol === blankSymbol
-                      ? 'var(--text-muted)'
-                      : 'var(--text-primary)',
+                    fontWeight: 600,
+                    color: symbol === blankSymbol && !isHead ? 'var(--text-faint)' : 'var(--text)',
                   }}
                 >
                   {symbol}
@@ -246,7 +174,7 @@ export const TuringMachineTape: React.FC = () => {
                   style={{
                     fontSize: '9px',
                     fontFamily: 'var(--font-mono)',
-                    color: isHead ? '#38bdf8' : 'var(--text-muted)',
+                    color: isHead ? 'var(--accent)' : 'var(--text-muted)',
                     marginTop: '2px',
                   }}
                 >

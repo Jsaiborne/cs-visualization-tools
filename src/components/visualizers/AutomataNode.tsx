@@ -33,7 +33,7 @@ export const AutomataNode: React.FC<NodeProps> = ({ data }) => {
       style={{
         position: 'relative',
         opacity: isFaded ? 0.18 : 1,
-        outline: isHighlighted ? '3px dashed var(--accent-amber)' : 'none',
+        outline: isHighlighted ? '2px dashed var(--warning)' : 'none',
         outlineOffset: '5px',
         display: 'flex',
         alignItems: 'center',
@@ -41,69 +41,60 @@ export const AutomataNode: React.FC<NodeProps> = ({ data }) => {
         width: '72px',
         height: '72px',
         borderRadius: '50%',
-        background: isActive
-          ? 'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.4) 0%, rgba(15, 23, 42, 0.95) 100%)'
-          : 'var(--bg-card)',
+        background: 'var(--surface)',
+        // A solid tint (not a glow) marks the active state
+        boxShadow: isActive ? 'inset 0 0 0 36px var(--accent-subtle)' : 'none',
         border: isActive
-          ? '2px solid var(--accent-blue)'
+          ? '2px solid var(--accent)'
           : groupColor
           ? `3px solid ${groupColor}`
-          : '2px solid var(--border-subtle)',
-        boxShadow: isActive
-          ? '0 0 24px rgba(56, 189, 248, 0.6), 0 0 48px rgba(168, 85, 247, 0.35)'
-          : 'var(--shadow-glass)',
-        transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-        backdropFilter: 'var(--glass-backdrop)',
-        WebkitBackdropFilter: 'var(--glass-backdrop)',
+          : '1.5px solid var(--border-strong)',
+        transition: 'border-color 200ms ease, box-shadow 200ms ease, opacity 200ms ease',
       }}
     >
-      {/* Target & Source Handles for Edge Connection */}
-      <Handle type="target" position={Position.Left} style={{ background: 'var(--accent-blue)', width: '8px', height: '8px' }} />
-      <Handle type="source" position={Position.Right} style={{ background: 'var(--accent-purple)', width: '8px', height: '8px' }} />
-      <Handle type="target" position={Position.Top} id="top" style={{ background: 'var(--accent-blue)', opacity: 0 }} />
-      <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: 'var(--accent-purple)', opacity: 0 }} />
+      {/* Connection handles: shown on hover, used to draw new transitions */}
+      <Handle type="target" position={Position.Left} className="automata-handle" />
+      <Handle type="source" position={Position.Right} className="automata-handle" />
+      <Handle type="target" position={Position.Top} id="top" style={{ opacity: 0 }} />
+      <Handle type="source" position={Position.Bottom} id="bottom" style={{ opacity: 0 }} />
 
-      {/* Start State Indicator Arrow */}
+      {/* Start state arrow */}
       {isStart && (
         <div
+          aria-hidden="true"
           style={{
             position: 'absolute',
-            left: '-26px',
+            left: '-24px',
             top: '50%',
             transform: 'translateY(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-            color: 'var(--accent-emerald)',
-            fontWeight: 800,
-            fontSize: '14px',
+            color: 'var(--text-muted)',
+            fontSize: '16px',
+            lineHeight: 1,
           }}
         >
-          ➔
+          →
         </div>
       )}
 
-      {/* Accept State Concentric Double Ring */}
+      {/* Accepting state: inner ring */}
       {isAcceptState && (
         <div
           style={{
             position: 'absolute',
             inset: '5px',
             borderRadius: '50%',
-            border: isActive ? '2px solid var(--accent-blue)' : '2px solid var(--text-secondary)',
+            border: `1.5px solid ${isActive ? 'var(--accent)' : 'var(--border-strong)'}`,
             pointerEvents: 'none',
-            transition: 'border-color 300ms ease',
           }}
         />
       )}
 
-      {/* State Label */}
       <span
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: `${labelFontSize(label)}px`,
-          fontWeight: 700,
-          color: isActive ? '#ffffff' : 'var(--text-primary)',
+          fontWeight: 600,
+          color: 'var(--text)',
           zIndex: 2,
           maxWidth: '62px',
           maxHeight: '58px',
@@ -111,7 +102,6 @@ export const AutomataNode: React.FC<NodeProps> = ({ data }) => {
           textAlign: 'center',
           lineHeight: 1.1,
           overflowWrap: 'anywhere',
-          textShadow: isActive ? '0 0 8px rgba(56, 189, 248, 0.8)' : 'none',
         }}
       >
         {label}

@@ -31,7 +31,7 @@ export function downloadSvgElement(svg: SVGSVGElement, filename: string, content
   background.setAttribute('y', String(box.y - pad));
   background.setAttribute('width', String(width));
   background.setAttribute('height', String(height));
-  background.setAttribute('fill', '#090d16');
+  background.setAttribute('fill', '#0f1115');
   clone.insertBefore(background, clone.firstChild);
 
   const markup = resolveCssVariables(

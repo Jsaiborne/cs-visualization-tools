@@ -1,49 +1,61 @@
 :root {
-  /* Color Palette - Dark Glassmorphic Modern Aesthetic */
-  --bg-dark: #090d16;
-  --bg-card: rgba(15, 23, 42, 0.75);
-  --bg-card-hover: rgba(30, 41, 59, 0.85);
-  --bg-sidebar: rgba(13, 19, 33, 0.9);
-  --bg-header: rgba(10, 15, 26, 0.85);
-  --bg-input: rgba(30, 41, 59, 0.6);
+  /* Surfaces: solid, layered from darkest to lightest */
+  --bg: #0f1115;
+  --surface: #16181d;
+  --surface-2: #1c1f25;
+  --surface-3: #23272e;
 
-  /* Accents */
-  --accent-blue: #38bdf8;
-  --accent-purple: #a855f7;
-  --accent-pink: #ec4899;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Lines */
+  --border: #2a2e36;
+  --border-strong: #3a3f49;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #ec4899 100%);
-  --gradient-glow: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 100%);
-  --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  /* Text */
+  --text: #e6e8eb;
+  --text-muted: #8b919c;
+  --text-faint: #5f6570;
 
-  /* Text Colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-glow: rgba(248, 250, 252, 0.9);
+  /* Accent: active tab, primary action, current step */
+  --accent: #6b9bd1;
+  --accent-hover: #7ba9dc;
+  --accent-subtle: rgba(107, 155, 209, 0.14);
+  --accent-border: rgba(107, 155, 209, 0.45);
+  --on-accent: #0f1115;
 
-  /* Glassmorphism Borders & Shadows */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(56, 189, 248, 0.4);
-  --glass-backdrop: blur(16px) saturate(180%);
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.25);
+  /* Status: accept / warning / reject and conflicts */
+  --success: #6fbf8e;
+  --success-subtle: rgba(111, 191, 142, 0.12);
+  --success-border: rgba(111, 191, 142, 0.4);
+  --warning: #d4a656;
+  --warning-subtle: rgba(212, 166, 86, 0.12);
+  --warning-border: rgba(212, 166, 86, 0.4);
+  --danger: #d9787a;
+  --danger-subtle: rgba(217, 120, 122, 0.12);
+  --danger-border: rgba(217, 120, 122, 0.4);
+
+  /* Categories: only to tell kinds of things apart (token types, partition blocks, symbols) */
+  --cat-1: #7ea6d8; /* blue */
+  --cat-2: #a99bd6; /* violet */
+  --cat-2-subtle: rgba(169, 155, 214, 0.14);
+  --cat-2-border: rgba(169, 155, 214, 0.4);
+  --cat-3: #6fb5ad; /* teal */
+  --cat-4: #d1aa64; /* amber */
+  --cat-5: #d58a9b; /* rose */
+  --cat-6: #8fbf7a; /* green */
+
+  /* Dims the page behind dialogs */
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  /* The only shadow: floating layers (menus, dialogs) */
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.45);
 
   /* Typography */
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Spacing & Radii */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-full: 9999px;
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 120ms ease;
 }

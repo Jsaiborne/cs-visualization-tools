@@ -23,6 +23,7 @@ import { useGrammarStore } from '../../store/useGrammarStore';
 import { useScopeStore } from '../../store/useScopeStore';
 import { useLRStore } from '../../store/useLRStore';
 import { getShareableURL } from '../../utils/urlState';
+import { BrandMark } from './BrandMark';
 
 const LibraryPanel = lazy(() => import('./LibraryPanel'));
 const ShortcutsHelp = lazy(() => import('./ShortcutsHelp'));
@@ -142,23 +143,26 @@ export const Header: React.FC = () => {
   };
 
   const modules: { id: ActiveModule; label: string; icon: React.ReactNode }[] = [
-    { id: 'HOME', label: 'Home', icon: <Home size={18} /> },
-    { id: 'AUTOMATA', label: 'Automata & TM', icon: <Network size={18} /> },
-    { id: 'REGEX', label: 'Regex', icon: <Binary size={18} /> },
-    { id: 'GRAMMAR', label: 'LL(1) Parsing', icon: <Cpu size={18} /> },
-    { id: 'LR', label: 'LR Parsing', icon: <Layers size={18} /> },
-    { id: 'COMPILER_AST', label: 'Compiler', icon: <Code2 size={18} /> },
+    { id: 'HOME', label: 'Home', icon: <Home size={15} /> },
+    { id: 'AUTOMATA', label: 'Automata & TM', icon: <Network size={15} /> },
+    { id: 'REGEX', label: 'Regex', icon: <Binary size={15} /> },
+    { id: 'GRAMMAR', label: 'LL(1) Parsing', icon: <Cpu size={15} /> },
+    { id: 'LR', label: 'LR Parsing', icon: <Layers size={15} /> },
+    { id: 'COMPILER_AST', label: 'Compiler', icon: <Code2 size={15} /> },
   ];
+
+  const playbackDisabled = hasValidationErrors || totalSteps === 0;
 
   return (
     <header
-      className="glass-header"
+      className="app-header"
       style={{
-        height: '60px',
-        padding: '0 24px',
+        height: '52px',
+        padding: '0 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: '16px',
         position: 'relative',
         zIndex: 10,
       }}
@@ -166,93 +170,61 @@ export const Header: React.FC = () => {
       {/* Toast Notification Popup */}
       {toastMessage && (
         <div
+          role="status"
           style={{
             position: 'absolute',
-            top: '70px',
-            right: '24px',
-            background: 'rgba(15, 23, 42, 0.95)',
-            border: '1px solid var(--accent-blue)',
-            boxShadow: '0 0 20px rgba(56, 189, 248, 0.35)',
-            color: 'var(--text-primary)',
-            padding: '10px 16px',
-            borderRadius: '8px',
+            top: '60px',
+            right: '16px',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border-strong)',
+            color: 'var(--text)',
+            padding: '8px 14px',
+            borderRadius: 'var(--radius-md)',
             fontSize: '13px',
-            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             zIndex: 100,
-            animation: 'fadeIn 200ms ease',
+            boxShadow: 'var(--shadow-popover)',
           }}
         >
-          <CheckCircle2 size={16} color="var(--accent-blue)" />
+          <CheckCircle2 size={15} color="var(--success)" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Brand & Title */}
-      <div
-        style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+      {/* Brand */}
+      <button
         onClick={() => setActiveModule('HOME')}
         title="TOC & Compiler Suite: home"
-      >
-        <div
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            background: 'var(--gradient-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'var(--shadow-glow)',
-          }}
-        >
-          <Cpu size={22} color="#ffffff" />
-        </div>
-        <div className="header-wide-only">
-          <h1
-            style={{ fontSize: '18px', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}
-            className="gradient-text"
-          >
-            TOC & Compiler Suite
-          </h1>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>
-            Interactive Theory of Computation Platform
-          </p>
-        </div>
-      </div>
-
-      {/* Module Navigation Tabs */}
-      <nav
         style={{
           display: 'flex',
-          gap: '4px',
-          background: 'rgba(15, 23, 42, 0.6)',
-          padding: '4px',
-          borderRadius: '10px',
-          border: '1px solid var(--border-subtle)',
+          alignItems: 'center',
+          gap: '10px',
+          border: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          padding: 0,
+          flexShrink: 0,
         }}
       >
+        <BrandMark size={28} />
+        <span className="header-wide-only" style={{ fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+          TOC & Compiler Suite
+        </span>
+      </button>
+
+      {/* Module tabs */}
+      <nav className="tabs" role="tablist" aria-label="Modules" style={{ alignSelf: 'stretch' }}>
         {modules.map((m) => (
           <button
             key={m.id}
             id={`tab-module-${m.id.toLowerCase()}`}
+            role="tab"
+            aria-selected={activeModule === m.id}
+            className="tab"
             onClick={() => setActiveModule(m.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              fontSize: '12px',
-              fontWeight: activeModule === m.id ? 600 : 400,
-              cursor: 'pointer',
-              background: activeModule === m.id ? 'var(--gradient-primary)' : 'transparent',
-              color: activeModule === m.id ? '#ffffff' : 'var(--text-secondary)',
-              transition: 'all 200ms ease',
-            }}
+            style={{ padding: '0 12px' }}
           >
             {m.icon}
             {m.label}
@@ -260,99 +232,86 @@ export const Header: React.FC = () => {
         ))}
       </nav>
 
-      {/* Controls & Share Button */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* Tools & playback */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
         <button
-          className="btn-secondary"
+          className="btn-ghost"
           onClick={() => setOpenDialog('shortcuts')}
           title="Keyboard shortcuts"
           aria-label="Keyboard shortcuts"
-          style={{ padding: '7px 9px' }}
+          style={{ padding: '6px 8px' }}
         >
-          <Keyboard size={15} />
+          <Keyboard size={16} />
         </button>
-
         <button
-          className="btn-secondary"
+          className="btn-ghost"
           onClick={() => setOpenDialog('library')}
           title="Save, load, import and export your work"
-          style={{ padding: '7px 12px', fontSize: '12px', gap: '6px' }}
+          style={{ padding: '6px 8px' }}
         >
-          <Library size={15} color="var(--accent-purple)" />
+          <Library size={16} />
           <span className="header-wide-only">Library</span>
         </button>
-
-        {/* Share Button */}
         <button
-          className="btn-secondary"
+          className="btn-ghost"
           onClick={handleShare}
           title="Share serialized URL configuration"
-          style={{ padding: '7px 12px', fontSize: '12px', gap: '6px' }}
+          style={{ padding: '6px 8px' }}
         >
-          <Share2 size={15} color="var(--accent-blue)" />
+          <Share2 size={16} />
           <span className="header-wide-only">Share</span>
         </button>
 
         {hasPlayback && (
           <>
-            <div
+            <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 8px' }} />
+            <span
               style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--border-subtle)',
                 fontSize: '12px',
                 fontFamily: 'var(--font-mono)',
-                color: 'var(--accent-blue)',
-                fontWeight: 600,
+                color: 'var(--text-muted)',
                 whiteSpace: 'nowrap',
+                marginRight: '6px',
               }}
             >
               Step {currentStepIndex + 1} / {totalSteps || 1}
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                className="btn-secondary"
-                onClick={reset}
-                disabled={hasValidationErrors || totalSteps === 0}
-                title="Reset to Step 0"
-                style={{ padding: '8px 10px', opacity: hasValidationErrors || totalSteps === 0 ? 0.5 : 1 }}
-              >
-                <RotateCcw size={16} />
-              </button>
-              <button
-                className="btn-secondary"
-                onClick={stepBackward}
-                disabled={hasValidationErrors || currentStepIndex === 0 || totalSteps === 0}
-                title="Step Backward"
-                style={{ padding: '8px 10px', opacity: hasValidationErrors || currentStepIndex === 0 || totalSteps === 0 ? 0.5 : 1 }}
-              >
-                <Rewind size={16} />
-              </button>
-              <button
-                className="btn-primary"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={hasValidationErrors || totalSteps === 0}
-                style={{
-                  minWidth: '85px',
-                  opacity: hasValidationErrors || totalSteps === 0 ? 0.5 : 1,
-                  cursor: hasValidationErrors || totalSteps === 0 ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-                {isPlaying ? 'Pause' : 'Run'}
-              </button>
-              <button
-                className="btn-secondary"
-                onClick={stepForward}
-                disabled={hasValidationErrors || currentStepIndex >= totalSteps - 1 || totalSteps === 0}
-                title="Step Forward"
-                style={{ padding: '8px 10px', opacity: hasValidationErrors || currentStepIndex >= totalSteps - 1 || totalSteps === 0 ? 0.5 : 1 }}
-              >
-                <FastForward size={16} />
-              </button>
-            </div>
+            </span>
+            <button
+              className="btn-ghost"
+              onClick={reset}
+              disabled={playbackDisabled}
+              title="Reset to Step 0"
+              style={{ padding: '6px 8px' }}
+            >
+              <RotateCcw size={16} />
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={stepBackward}
+              disabled={playbackDisabled || currentStepIndex === 0}
+              title="Step Backward"
+              style={{ padding: '6px 8px' }}
+            >
+              <Rewind size={16} />
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => setIsPlaying(!isPlaying)}
+              disabled={playbackDisabled}
+              style={{ minWidth: '76px' }}
+            >
+              {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+              {isPlaying ? 'Pause' : 'Run'}
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={stepForward}
+              disabled={playbackDisabled || currentStepIndex >= totalSteps - 1}
+              title="Step Forward"
+              style={{ padding: '6px 8px' }}
+            >
+              <FastForward size={16} />
+            </button>
           </>
         )}
       </div>

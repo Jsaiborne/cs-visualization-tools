@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, RotateCcw, Sparkles } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAutomataStore, defaultTM, binaryIncrementerTM } from '../../store/useAutomataStore';
 import { TuringMachineTape } from './TuringMachineTape';
@@ -46,19 +46,19 @@ export const TuringMachineView: React.FC = () => {
         flexDirection: 'column',
         width: '100%',
         height: '100%',
-        padding: '20px',
-        gap: '20px',
+        padding: '16px',
+        gap: '16px',
         // Sections keep their natural height (flexShrink: 0); the view scrolls instead of squeezing them
         overflowY: 'auto',
-        background: 'var(--bg-dark)',
+        background: 'var(--bg)',
       }}
     >
-      {/* Control Bar: Preset Switcher & Input Loader */}
+      {/* Machine, presets and input */}
       <div
-        className="glass-panel"
+        className="panel"
         style={{
           flexShrink: 0,
-          padding: '14px 20px',
+          padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -66,81 +66,31 @@ export const TuringMachineView: React.FC = () => {
           gap: '12px',
         }}
       >
-        {/* Machine Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              padding: '8px',
-              borderRadius: '8px',
-              background: 'rgba(56, 189, 248, 0.15)',
-              color: '#38bdf8',
-            }}
-          >
-            <Cpu size={20} />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-              {automaton.name || 'Turing Machine Simulator'}
-            </h3>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-              Turing Machine Engine with 1D Bi-Infinite Memory Tape & Transition Rules
-            </span>
-          </div>
+        <div>
+          <h3 style={{ fontSize: '14px', fontWeight: 600 }}>{automaton.name || 'Turing Machine Simulator'}</h3>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>One tape, unbounded in both directions</span>
         </div>
 
-        {/* Input Field & Presets */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Preset Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} color="var(--accent-purple)" />
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Presets:</span>
-            {presets.map((p, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSelectPreset(p)}
-                style={{
-                  padding: '4px 10px',
-                  fontSize: '11px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border-subtle)',
-                  background:
-                    automaton.id === p.config.id
-                      ? 'var(--gradient-primary)'
-                      : 'rgba(30, 41, 59, 0.5)',
-                  color: automaton.id === p.config.id ? '#ffffff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  fontWeight: automaton.id === p.config.id ? 600 : 400,
-                  transition: 'all 150ms ease',
-                }}
-              >
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginRight: '2px' }}>Presets</span>
+            {presets.map((p) => (
+              <button key={p.label} className="preset" aria-pressed={automaton.id === p.config.id} onClick={() => handleSelectPreset(p)}>
                 {p.label}
               </button>
             ))}
           </div>
-
-          {/* Test Input Input Box */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <input
               type="text"
+              className="input"
               value={testInput}
               onChange={(e) => setTestInput(e.target.value)}
               placeholder="Initial Tape String..."
-              style={{
-                width: '140px',
-                padding: '5px 10px',
-                fontSize: '12px',
-                fontFamily: 'JetBrains Mono, monospace',
-                borderRadius: '6px',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: '#ffffff',
-              }}
+              aria-label="Initial tape"
+              style={{ width: '140px', fontFamily: 'var(--font-mono)', fontSize: '13px' }}
             />
-            <button
-              className="btn-primary"
-              onClick={runSimulation}
-              style={{ padding: '5px 12px', fontSize: '12px', gap: '6px' }}
-            >
+            <button className="btn" onClick={runSimulation}>
               <RotateCcw size={13} /> Reload
             </button>
             <ExportMenu automaton={automaton} />
@@ -151,34 +101,23 @@ export const TuringMachineView: React.FC = () => {
       {/* 1D Tape Visualizer Component */}
       <TuringMachineTape />
 
-      {/* Step Description Banner */}
+      {/* Current step */}
       {currentStep && (
         <div
+          className="panel"
           style={{
             flexShrink: 0,
-            padding: '12px 16px',
-            borderRadius: '8px',
-            background: 'rgba(15, 23, 42, 0.7)',
-            border: '1px solid var(--border-subtle)',
+            padding: '10px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            fontSize: '12px',
-            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
           }}
         >
-          <span
-            style={{
-              padding: '2px 8px',
-              borderRadius: '4px',
-              background: 'rgba(56, 189, 248, 0.15)',
-              color: '#38bdf8',
-              fontWeight: 700,
-            }}
-          >
+          <span className="badge badge-accent" style={{ fontFamily: 'var(--font-mono)' }}>
             Step {currentStepIndex + 1}
           </span>
-          <span style={{ color: 'var(--text-primary)' }}>{currentStep.description}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>{currentStep.description}</span>
         </div>
       )}
 

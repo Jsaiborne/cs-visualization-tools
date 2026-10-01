@@ -4,8 +4,6 @@ import {
   Table,
   AlertTriangle,
   CheckCircle2,
-  BookOpen,
-  ArrowRight,
   Zap,
   GitBranch,
   Wand2,
@@ -27,25 +25,12 @@ const smallButton: React.CSSProperties = {
   padding: '3px 8px',
   fontSize: '11px',
   borderRadius: '5px',
-  border: '1px solid var(--border-subtle)',
-  background: 'rgba(30, 41, 59, 0.6)',
-  color: 'var(--text-primary)',
+  border: '1px solid var(--border)',
+  background: 'var(--surface-3)',
+  color: 'var(--text)',
   cursor: 'pointer',
 };
 
-const tabButton = (active: boolean): React.CSSProperties => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-  padding: '4px 10px',
-  fontSize: '12px',
-  fontWeight: active ? 700 : 500,
-  borderRadius: '6px',
-  border: 'none',
-  background: active ? 'var(--accent-blue)' : 'transparent',
-  color: active ? '#0f172a' : 'var(--text-secondary)',
-  cursor: 'pointer',
-});
 
 export const CFGViewer: React.FC = () => {
   const {
@@ -103,16 +88,16 @@ export const CFGViewer: React.FC = () => {
         height: '100%',
         width: '100%',
         overflow: 'hidden',
-        background: 'var(--bg-dark)',
-        color: 'var(--text-primary)',
+        background: 'var(--bg)',
+        color: 'var(--text)',
       }}
     >
       {/* Control Toolbar */}
       <div
         style={{
           padding: '10px 20px',
-          background: 'rgba(15, 23, 42, 0.95)',
-          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -122,25 +107,14 @@ export const CFGViewer: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
-            Presets:
-          </span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Presets</span>
           {PRESET_GRAMMARS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => loadPreset(preset.id)}
-              className="btn-secondary"
-              style={{
-                fontSize: '12px',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(30, 41, 59, 0.8)',
-              }}
+              className="preset"
+              aria-pressed={grammarText === preset.grammarText}
             >
-              <BookOpen size={13} color="var(--accent-purple)" />
               {preset.name}
             </button>
           ))}
@@ -148,25 +122,15 @@ export const CFGViewer: React.FC = () => {
 
         {/* Test String Input Bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, maxWidth: '480px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-            Input Tape:
-          </span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Input</span>
           <input
             type="text"
+            className="input"
             value={testInput}
             onChange={(e) => setTestInput(e.target.value)}
             placeholder="e.g. id + id * id"
-            style={{
-              flex: 1,
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '13px',
-              outline: 'none',
-            }}
+            aria-label="Input tape"
+            style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '13px' }}
           />
         </div>
       </div>
@@ -193,7 +157,7 @@ export const CFGViewer: React.FC = () => {
         >
           {/* Grammar Text Editor Box */}
           <div
-            className="glass-panel"
+            className="panel"
             style={{
               flex: '1 1 50%',
               display: 'flex',
@@ -203,8 +167,8 @@ export const CFGViewer: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-                <Zap size={14} color="var(--accent-cyan)" /> Context-Free Grammar
+              <span style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                <Zap size={14} color="var(--text-muted)" /> Context-Free Grammar
               </span>
               <div style={{ display: 'flex', gap: '4px' }}>
                 <button onClick={() => setTransform('left-recursion')} title="Remove left recursion, step by step" style={smallButton}>
@@ -224,11 +188,11 @@ export const CFGViewer: React.FC = () => {
               style={{
                 flex: 1,
                 width: '100%',
-                background: 'rgba(10, 15, 30, 0.7)',
-                border: '1px solid var(--border-subtle)',
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
                 padding: '10px',
-                color: '#e2e8f0',
+                color: 'var(--text)',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '13px',
                 lineHeight: 1.5,
@@ -243,9 +207,9 @@ export const CFGViewer: React.FC = () => {
                   marginTop: '8px',
                   padding: '8px',
                   borderRadius: '6px',
-                  background: 'rgba(244, 63, 94, 0.15)',
-                  border: '1px solid rgba(244, 63, 94, 0.4)',
-                  color: '#fda4af',
+                  background: 'var(--danger-subtle)',
+                  border: '1px solid var(--danger-border)',
+                  color: 'var(--danger)',
                   fontSize: '11px',
                   display: 'flex',
                   alignItems: 'center',
@@ -259,7 +223,7 @@ export const CFGViewer: React.FC = () => {
 
           {/* FIRST & FOLLOW Sets Display */}
           <div
-            className="glass-panel"
+            className="panel"
             style={{
               flex: '1 1 50%',
               display: 'flex',
@@ -268,9 +232,7 @@ export const CFGViewer: React.FC = () => {
               overflow: 'auto',
             }}
           >
-            <h3 style={{ fontSize: '13px', fontWeight: 700, marginBottom: '10px', color: 'var(--accent-purple)' }}>
-              FIRST & FOLLOW Sets
-            </h3>
+            <h3 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px' }}>FIRST & FOLLOW Sets</h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {grammar.nonTerminals.map((nt) => {
@@ -281,16 +243,14 @@ export const CFGViewer: React.FC = () => {
                   <div
                     key={nt}
                     style={{
-                      background: 'rgba(15, 23, 42, 0.6)',
-                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
                       borderRadius: '6px',
                       padding: '8px 10px',
                       fontSize: '12px',
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
-                      Non-Terminal: <span style={{ fontFamily: 'var(--font-mono)' }}>{nt}</span>
-                    </div>
+                    <div style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--cat-2)', marginBottom: '4px' }}>{nt}</div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)', width: '50px' }}>FIRST:</span>
@@ -299,9 +259,9 @@ export const CFGViewer: React.FC = () => {
                           <span
                             key={s}
                             style={{
-                              background: 'rgba(56, 189, 248, 0.15)',
-                              border: '1px solid rgba(56, 189, 248, 0.3)',
-                              color: '#38bdf8',
+                              background: 'var(--accent-subtle)',
+                              border: '1px solid var(--accent-border)',
+                              color: 'var(--accent)',
                               padding: '1px 6px',
                               borderRadius: '4px',
                               fontFamily: 'var(--font-mono)',
@@ -321,9 +281,9 @@ export const CFGViewer: React.FC = () => {
                           <span
                             key={s}
                             style={{
-                              background: 'rgba(168, 85, 247, 0.15)',
-                              border: '1px solid rgba(168, 85, 247, 0.3)',
-                              color: '#c084fc',
+                              background: 'var(--cat-2-subtle)',
+                              border: '1px solid var(--cat-2-border)',
+                              color: 'var(--cat-2)',
                               padding: '1px 6px',
                               borderRadius: '4px',
                               fontFamily: 'var(--font-mono)',
@@ -344,7 +304,7 @@ export const CFGViewer: React.FC = () => {
 
         {/* Center Column: 2D LL(1) Parsing Table */}
         <div
-          className="glass-panel"
+          className="panel"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -353,11 +313,11 @@ export const CFGViewer: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div role="tablist" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <button role="tab" aria-selected={centerTab === 'table'} onClick={() => setCenterTab('table')} style={tabButton(centerTab === 'table')}>
+            <div role="tablist" className="tabs">
+              <button role="tab" aria-selected={centerTab === 'table'} onClick={() => setCenterTab('table')} className="tab">
                 <Table size={14} /> LL(1) Table
               </button>
-              <button role="tab" aria-selected={centerTab === 'tree'} onClick={() => setCenterTab('tree')} style={tabButton(centerTab === 'tree')}>
+              <button role="tab" aria-selected={centerTab === 'tree'} onClick={() => setCenterTab('tree')} className="tab">
                 <GitBranch size={14} /> Parse Tree
               </button>
             </div>
@@ -366,10 +326,10 @@ export const CFGViewer: React.FC = () => {
               <span
                 style={{
                   fontSize: '11px',
-                  color: '#fda4af',
-                  background: 'rgba(244, 63, 94, 0.2)',
+                  color: 'var(--danger)',
+                  background: 'var(--danger-subtle)',
                   padding: '2px 8px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-md)',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -382,10 +342,10 @@ export const CFGViewer: React.FC = () => {
               <span
                 style={{
                   fontSize: '11px',
-                  color: '#4ade80',
-                  background: 'rgba(74, 222, 128, 0.15)',
+                  color: 'var(--success)',
+                  background: 'var(--success-subtle)',
                   padding: '2px 8px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-md)',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -404,8 +364,8 @@ export const CFGViewer: React.FC = () => {
                 padding: '8px 10px',
                 borderRadius: '6px',
                 fontSize: '12px',
-                background: 'rgba(245, 158, 11, 0.08)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
+                background: 'var(--warning-subtle)',
+                border: '1px solid var(--warning-border)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '6px',
@@ -435,7 +395,7 @@ export const CFGViewer: React.FC = () => {
           )}
 
           {centerTab === 'tree' ? (
-            <div style={{ flex: 1, minHeight: 0, border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ flex: 1, minHeight: 0, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               <ParseTreeView
                 roots={treeRoots}
                 step={currentStepIndex}
@@ -450,9 +410,9 @@ export const CFGViewer: React.FC = () => {
             style={{
               flex: 1,
               overflow: 'auto',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
-              background: 'rgba(10, 15, 30, 0.6)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg)',
             }}
           >
             <table
@@ -464,7 +424,7 @@ export const CFGViewer: React.FC = () => {
               }}
             >
               <thead>
-                <tr style={{ background: 'rgba(15, 23, 42, 0.9)', borderBottom: '1px solid var(--border-subtle)' }}>
+                <tr style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
                   <th style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 600 }}>
                     Non-Terminal \ Terminal
                   </th>
@@ -474,7 +434,7 @@ export const CFGViewer: React.FC = () => {
                       style={{
                         padding: '10px',
                         textAlign: 'center',
-                        color: col === END_MARKER ? 'var(--accent-purple)' : '#38bdf8',
+                        color: col === END_MARKER ? 'var(--cat-2)' : 'var(--accent)',
                         fontWeight: 700,
                       }}
                     >
@@ -488,17 +448,17 @@ export const CFGViewer: React.FC = () => {
                   <tr
                     key={nt}
                     style={{
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderBottom: '1px solid var(--border)',
                     }}
                   >
                     <td
                       style={{
                         padding: '10px',
                         fontWeight: 700,
-                        color: '#38bdf8',
+                        color: 'var(--accent)',
                         textAlign: 'center',
-                        background: 'rgba(15, 23, 42, 0.4)',
-                        borderRight: '1px solid var(--border-subtle)',
+                        background: 'var(--surface-2)',
+                        borderRight: '1px solid var(--border)',
                       }}
                     >
                       {nt}
@@ -518,27 +478,26 @@ export const CFGViewer: React.FC = () => {
                             textAlign: 'center',
                             transition: 'all 200ms ease',
                             background: isHighlighted
-                              ? 'rgba(56, 189, 248, 0.25)'
+                              ? 'var(--accent-subtle)'
                               : hasConflict
-                              ? 'rgba(244, 63, 94, 0.2)'
+                              ? 'var(--danger-subtle)'
                               : 'transparent',
                             border: isHighlighted
-                              ? '2px solid #38bdf8'
+                              ? '2px solid var(--accent)'
                               : hasConflict
-                              ? '1px solid rgba(244, 63, 94, 0.5)'
-                              : '1px solid rgba(255, 255, 255, 0.03)',
-                            boxShadow: isHighlighted ? '0 0 12px rgba(56, 189, 248, 0.4)' : 'none',
+                              ? '1px solid var(--danger-border)'
+                              : '1px solid var(--border)',
                           }}
                         >
                           {rule ? (
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{rule.lhs} &rarr;</span>
-                              <span style={{ color: isHighlighted ? '#ffffff' : '#e2e8f0', fontWeight: isHighlighted ? 700 : 500 }}>
+                              <span style={{ color: isHighlighted ? 'var(--text)' : 'var(--text)', fontWeight: isHighlighted ? 700 : 500 }}>
                                 {rule.rhs.join(' ')}
                               </span>
                             </div>
                           ) : (
-                            <span style={{ color: 'rgba(255, 255, 255, 0.15)' }}>-</span>
+                            <span style={{ color: 'var(--text-faint)' }}>-</span>
                           )}
                         </td>
                       );
@@ -556,8 +515,8 @@ export const CFGViewer: React.FC = () => {
               marginTop: '12px',
               padding: '10px 14px',
               borderRadius: '6px',
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid var(--border-subtle)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -571,12 +530,12 @@ export const CFGViewer: React.FC = () => {
                   fontFamily: 'var(--font-mono)',
                   color:
                     currentStep?.status === 'ACCEPT'
-                      ? '#4ade80'
+                      ? 'var(--success)'
                       : currentStep?.status === 'ERROR'
-                      ? '#fda4af'
+                      ? 'var(--danger)'
                       : currentStep?.status === 'PREDICT'
-                      ? '#38bdf8'
-                      : '#c084fc',
+                      ? 'var(--accent)'
+                      : 'var(--cat-2)',
                   fontWeight: 600,
                 }}
               >
@@ -584,7 +543,7 @@ export const CFGViewer: React.FC = () => {
               </span>
             </div>
             {currentStep && (
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 Step {currentStepIndex + 1} of {executionSteps.length}
               </span>
             )}
@@ -593,7 +552,7 @@ export const CFGViewer: React.FC = () => {
 
         {/* Right Column: Animated Pushdown Stack Visualizer */}
         <div
-          className="glass-panel"
+          className="panel"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -602,8 +561,8 @@ export const CFGViewer: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Layers size={16} color="var(--accent-cyan)" />
-            <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>
+            <Layers size={16} color="var(--text-muted)" />
+            <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>
               Pushdown Stack
             </h3>
           </div>
@@ -613,8 +572,8 @@ export const CFGViewer: React.FC = () => {
             style={{
               padding: '8px 10px',
               borderRadius: '6px',
-              background: 'rgba(15, 23, 42, 0.7)',
-              border: '1px solid var(--border-subtle)',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
               marginBottom: '12px',
               fontSize: '11px',
             }}
@@ -630,10 +589,10 @@ export const CFGViewer: React.FC = () => {
                     style={{
                       padding: '2px 6px',
                       borderRadius: '4px',
-                      background: idx === 0 ? 'rgba(168, 85, 247, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                      border: idx === 0 ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.1)',
-                      color: idx === 0 ? '#ffffff' : 'var(--text-secondary)',
-                      fontWeight: idx === 0 ? 700 : 400,
+                      background: idx === 0 ? 'var(--accent-subtle)' : 'transparent',
+                      border: `1px solid ${idx === 0 ? 'var(--accent)' : 'var(--border)'}`,
+                      color: idx === 0 ? 'var(--text)' : 'var(--text-muted)',
+                      fontWeight: idx === 0 ? 600 : 400,
                     }}
                   >
                     {token}
@@ -653,9 +612,9 @@ export const CFGViewer: React.FC = () => {
               flexDirection: 'column-reverse',
               gap: '6px',
               padding: '12px',
-              background: 'rgba(10, 15, 30, 0.7)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
+              background: 'var(--bg)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)',
               overflowY: 'auto',
             }}
           >
@@ -670,17 +629,8 @@ export const CFGViewer: React.FC = () => {
                     style={{
                       padding: '10px 14px',
                       borderRadius: '6px',
-                      background: isTop
-                        ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(168, 85, 247, 0.3))'
-                        : isNonTerminal
-                        ? 'rgba(30, 41, 59, 0.7)'
-                        : 'rgba(15, 23, 42, 0.5)',
-                      border: isTop
-                        ? '1px solid #38bdf8'
-                        : isNonTerminal
-                        ? '1px solid rgba(56, 189, 248, 0.3)'
-                        : '1px solid var(--border-subtle)',
-                      boxShadow: isTop ? '0 0 10px rgba(56, 189, 248, 0.3)' : 'none',
+                      background: isTop ? 'var(--accent-subtle)' : 'var(--surface)',
+                      border: `1px solid ${isTop ? 'var(--accent)' : 'var(--border)'}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -689,25 +639,11 @@ export const CFGViewer: React.FC = () => {
                       transition: 'all 200ms ease',
                     }}
                   >
-                    <span style={{ fontWeight: isTop ? 700 : 500, color: isTop ? '#ffffff' : isNonTerminal ? '#38bdf8' : '#e2e8f0' }}>
+                    <span style={{ fontWeight: isTop ? 600 : 500, color: isNonTerminal ? 'var(--cat-2)' : 'var(--text)' }}>
                       {symbol}
                     </span>
                     {isTop && (
-                      <span
-                        style={{
-                          fontSize: '9px',
-                          fontWeight: 700,
-                          padding: '1px 6px',
-                          borderRadius: '10px',
-                          background: '#38bdf8',
-                          color: '#0f172a',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '2px',
-                        }}
-                      >
-                        TOP <ArrowRight size={10} />
-                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--accent)' }}>top</span>
                     )}
                   </div>
                 );

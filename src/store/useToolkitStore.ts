@@ -38,7 +38,17 @@ export const useToolkitStore = create<ToolkitState>((set) => ({
     ),
 }));
 
-export const BLOCK_COLORS = ['#38bdf8', '#a855f7', '#10b981', '#f59e0b', '#ec4899', '#f43f5e', '#22d3ee', '#a3e635'];
+// Partition blocks are told apart by category colors (not the accept/reject status colors)
+export const BLOCK_COLORS = [
+  'var(--cat-1)',
+  'var(--cat-2)',
+  'var(--cat-3)',
+  'var(--cat-4)',
+  'var(--cat-5)',
+  'var(--cat-6)',
+  'var(--text)',
+  'var(--text-muted)',
+];
 
 export interface CanvasDecorations {
   fadedStates: Set<string>;

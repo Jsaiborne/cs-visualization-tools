@@ -49,11 +49,11 @@ export const TuringMachineTable: React.FC = () => {
   const getMoveIcon = (dir: TMDirection) => {
     switch (dir) {
       case 'L':
-        return <ArrowLeft size={12} color="#38bdf8" />;
+        return <ArrowLeft size={12} color="var(--accent)" />;
       case 'R':
-        return <ArrowRight size={12} color="#38bdf8" />;
+        return <ArrowRight size={12} color="var(--accent)" />;
       case 'N':
-        return <CircleDot size={12} color="#a855f7" />;
+        return <CircleDot size={12} color="var(--cat-2)" />;
     }
   };
 
@@ -64,11 +64,10 @@ export const TuringMachineTable: React.FC = () => {
         flexDirection: 'column',
         width: '100%',
         flexShrink: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: '12px',
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
-        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Table Header */}
@@ -78,13 +77,13 @@ export const TuringMachineTable: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(15, 23, 42, 0.8)',
-          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Table size={16} color="var(--accent-purple)" />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+          <Table size={16} color="var(--text-muted)" />
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>
             Transition Rule Table (δ Function)
           </span>
         </div>
@@ -104,8 +103,8 @@ export const TuringMachineTable: React.FC = () => {
           onSubmit={handleAddRule}
           style={{
             padding: '12px 16px',
-            background: 'rgba(30, 41, 59, 0.5)',
-            borderBottom: '1px solid var(--border-subtle)',
+            background: 'var(--surface-3)',
+            borderBottom: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -123,9 +122,9 @@ export const TuringMachineTable: React.FC = () => {
                 padding: '4px 6px',
                 fontSize: '11px',
                 borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: '#ffffff',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
               }}
             />
           </div>
@@ -141,9 +140,9 @@ export const TuringMachineTable: React.FC = () => {
                 padding: '4px 6px',
                 fontSize: '11px',
                 borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: '#ffffff',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
                 textAlign: 'center',
               }}
             />
@@ -162,9 +161,9 @@ export const TuringMachineTable: React.FC = () => {
                 padding: '4px 6px',
                 fontSize: '11px',
                 borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: '#ffffff',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
                 textAlign: 'center',
               }}
             />
@@ -179,9 +178,9 @@ export const TuringMachineTable: React.FC = () => {
                 padding: '4px 6px',
                 fontSize: '11px',
                 borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: '#ffffff',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
               }}
             >
               <option value="R">R (Right)</option>
@@ -201,9 +200,9 @@ export const TuringMachineTable: React.FC = () => {
                 padding: '4px 6px',
                 fontSize: '11px',
                 borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.8)',
-                color: '#ffffff',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text)',
               }}
             />
           </div>
@@ -231,8 +230,8 @@ export const TuringMachineTable: React.FC = () => {
           <thead>
             <tr
               style={{
-                background: 'rgba(15, 23, 42, 0.9)',
-                borderBottom: '1px solid var(--border-subtle)',
+                background: 'var(--surface)',
+                borderBottom: '1px solid var(--border)',
                 color: 'var(--text-muted)',
                 fontSize: '11px',
                 textTransform: 'uppercase',
@@ -270,15 +269,14 @@ export const TuringMachineTable: React.FC = () => {
                   <tr
                     key={rule.id || idx}
                     style={{
-                      borderBottom: '1px solid var(--border-subtle)',
+                      borderBottom: '1px solid var(--border)',
                       background: isActive
-                        ? 'rgba(56, 189, 248, 0.15)'
+                        ? 'var(--accent-subtle)'
                         : idx % 2 === 0
-                        ? 'rgba(15, 23, 42, 0.3)'
+                        ? 'var(--surface-2)'
                         : 'transparent',
-                      color: isActive ? '#ffffff' : 'var(--text-primary)',
+                      color: isActive ? 'var(--text)' : 'var(--text)',
                       fontWeight: isActive ? 600 : 400,
-                      boxShadow: isActive ? 'inset 4px 0 0 #38bdf8' : 'none',
                       transition: 'all 150ms ease',
                     }}
                   >
@@ -287,7 +285,7 @@ export const TuringMachineTable: React.FC = () => {
                       style={{
                         padding: '8px 12px',
                         fontFamily: 'var(--font-mono)',
-                        color: isActive ? '#38bdf8' : 'var(--text-muted)',
+                        color: isActive ? 'var(--accent)' : 'var(--text-muted)',
                         fontSize: '11px',
                       }}
                     >
@@ -300,8 +298,8 @@ export const TuringMachineTable: React.FC = () => {
                         style={{
                           padding: '2px 6px',
                           borderRadius: '4px',
-                          background: 'rgba(30, 41, 59, 0.6)',
-                          border: '1px solid var(--border-subtle)',
+                          background: 'var(--surface-3)',
+                          border: '1px solid var(--border)',
                         }}
                       >
                         {rule.fromState}
@@ -314,8 +312,8 @@ export const TuringMachineTable: React.FC = () => {
                         style={{
                           padding: '2px 8px',
                           borderRadius: '4px',
-                          background: 'rgba(168, 85, 247, 0.15)',
-                          color: '#c084fc',
+                          background: 'var(--cat-2-subtle)',
+                          color: 'var(--cat-2)',
                           fontWeight: 700,
                         }}
                       >
@@ -327,10 +325,10 @@ export const TuringMachineTable: React.FC = () => {
                     <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>Write</span>
-                        <span style={{ color: '#34d399', fontWeight: 700 }}>'{rule.write}'</span>
+                        <span style={{ color: 'var(--success)', fontWeight: 700 }}>'{rule.write}'</span>
                         <span style={{ color: 'var(--text-muted)', margin: '0 2px' }}>|</span>
                         <span>Move</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#38bdf8', fontWeight: 700 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--accent)', fontWeight: 700 }}>
                           {getMoveIcon(rule.move)} {rule.move}
                         </span>
                       </div>
@@ -342,9 +340,9 @@ export const TuringMachineTable: React.FC = () => {
                         style={{
                           padding: '2px 6px',
                           borderRadius: '4px',
-                          background: 'rgba(30, 41, 59, 0.6)',
-                          border: '1px solid var(--border-subtle)',
-                          color: rule.nextState.includes('accept') ? '#34d399' : '#ffffff',
+                          background: 'var(--surface-3)',
+                          border: '1px solid var(--border)',
+                          color: rule.nextState.includes('accept') ? 'var(--success)' : 'var(--text)',
                         }}
                       >
                         {rule.nextState}
@@ -362,7 +360,7 @@ export const TuringMachineTable: React.FC = () => {
                           cursor: 'pointer',
                           padding: '4px',
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#f43f5e')}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--danger)')}
                         onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
                         title="Delete Rule"
                       >

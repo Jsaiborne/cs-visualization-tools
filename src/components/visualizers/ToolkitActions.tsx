@@ -8,19 +8,7 @@ import { minimizeDfa } from '../../core/automata/minimize';
 
 const CompareDialog = lazy(() => import('./CompareDialog'));
 
-const buttonStyle = (enabled: boolean): React.CSSProperties => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '5px',
-  padding: '3px 10px',
-  borderRadius: '4px',
-  border: '1px solid var(--border-subtle)',
-  fontSize: '11px',
-  background: 'rgba(30, 41, 59, 0.6)',
-  color: enabled ? 'var(--text-primary)' : 'var(--text-muted)',
-  cursor: enabled ? 'pointer' : 'not-allowed',
-  opacity: enabled ? 1 : 0.5,
-});
+const toolButton: React.CSSProperties = { padding: '3px 10px', fontSize: '12px' };
 
 /** Machine-level tools in the canvas sub-header: NFA → DFA, minimize, compare languages. */
 export const ToolkitActions: React.FC = () => {
@@ -55,12 +43,12 @@ export const ToolkitActions: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '2px' }}>Tools:</span>
+      <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginRight: '2px' }}>Tools</span>
       <button
         onClick={handleConvert}
         disabled={!canConvert}
         title={canConvert ? 'Convert this NFA to a DFA, step by step' : 'Available for NFAs (e.g. from a regex)'}
-        style={buttonStyle(canConvert)}
+        className="btn" style={toolButton}
       >
         <Shuffle size={12} /> NFA → DFA
       </button>
@@ -68,11 +56,11 @@ export const ToolkitActions: React.FC = () => {
         onClick={handleMinimize}
         disabled={!canMinimize}
         title={canMinimize ? 'Merge indistinguishable states, round by round' : 'Available for DFAs'}
-        style={buttonStyle(canMinimize)}
+        className="btn" style={toolButton}
       >
         <Minimize2 size={12} /> Minimize
       </button>
-      <button onClick={() => setComparing(true)} title="Check whether two languages are equal" style={buttonStyle(true)}>
+      <button onClick={() => setComparing(true)} title="Check whether two languages are equal" className="btn" style={toolButton}>
         <GitCompare size={12} /> Compare…
       </button>
       <Suspense fallback={null}>{comparing && <CompareDialog onClose={() => setComparing(false)} />}</Suspense>
